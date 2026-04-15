@@ -1029,7 +1029,7 @@
     @include('layouts.front-end.partials.modal._chatting',['seller'=>$product->seller, 'user_type'=>$product->added_by])
 
     <!-- Resell Now Modal -->
-    <div class="modal fade rtl text-align-direction" id="resellNowModal" tabindex="-1" role="dialog" aria-labelledby="resellNowModalLabel" aria-hidden="true">
+    <div class="modal fade rtl text-align-direction" id="resellNowModal" tabindex="-1" role="dialog" aria-labelledby="resellNowModalLabel">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -1046,8 +1046,21 @@
                             <div class="card">
                                 <div class="card-body">
                                     <p class="mb-2"><strong>{{ translate('product_name') }}:</strong> <span id="resell-product-name"></span></p>
-                                    <p class="mb-2"><strong>{{ translate('original_price') }}:</strong> <span id="resell-original-price"></span></p>
-                                    <p class="mb-2"><strong>{{ translate('your_price') }}:</strong> <span id="resell-your-price"></span></p>
+                                    <div class="mb-3 d-flex align-items-center gap-3 mt-2">
+                                        <strong>{{ translate('quantity') }}:</strong>
+                                        <div class="d-flex justify-content-between align-items-center quantity-box border rounded border-base web-text-primary px-1" style="max-width: 140px;">
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-number __p-10 web-text-primary" type="button" id="resell-qty-minus">-</button>
+                                            </span>
+                                            <input type="number" id="resell-quantity" class="form-control input-number text-center __inline-29 border-0 p-0 m-0 fw-bold" value="1" min="1" style="width: 40px !important; outline: none; box-shadow: none;">
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-number __p-10 web-text-primary" type="button" id="resell-qty-plus">+</button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p class="mb-2"><strong>{{ translate('unit_price') }}:</strong> <span id="resell-unit-price"></span></p>
+                                    <p class="mb-2"><strong>{{ translate('original_price') }} ({{ translate('total') }}):</strong> <span id="resell-original-price"></span></p>
+                                    <p class="mb-2"><strong>{{ translate('your_price') }} ({{ translate('total') }}):</strong> <span id="resell-your-price"></span></p>
                                     <p class="mb-2"><strong>{{ translate('profit_margin') }}:</strong> <span id="resell-profit-margin"></span></p>
                                 </div>
                             </div>
@@ -1057,7 +1070,9 @@
                             <div class="card">
                                 <div class="card-body">
                                     <div class="mb-3">
-                                        <label for="resell-price" class="form-label">{{ translate('set_your_resell_price') }}</label>
+                                        <label for="resell-price" class="form-label">
+                                            {{ translate('set_your_resell_price') }} <small class="text-muted">(/ {{ translate('unit') }})</small>
+                                        </label>
                                         <div class="input-group">
                                             <span class="input-group-text">{{ getCurrencySymbol(type: 'web') }}</span>
                                             <input type="number" class="form-control" id="resell-price" min="0" step="0.01">
@@ -1065,7 +1080,9 @@
                                         <small class="text-muted">{{ translate('set_price_above_to_calculate_profit') }}</small>
                                     </div>
                                     <div class="mb-2">
-                                        <label for="reseller-profit" class="form-label">{{ translate('your_profit_amount') }}</label>
+                                        <label for="reseller-profit" class="form-label">
+                                            {{ translate('your_profit_amount') }} <small class="text-muted">(/ {{ translate('unit') }})</small>
+                                        </label>
                                         <div class="input-group">
                                             <span class="input-group-text">{{ getCurrencySymbol(type: 'web') }}</span>
                                             <input type="number" class="form-control" id="reseller-profit" min="0" step="0.01" placeholder="0.00">
@@ -1076,16 +1093,16 @@
                                         <label for="commission-rate" class="form-label">{{ translate('commission_rate') }} (%)</label>
                                         <input type="number" class="form-control" id="commission-rate" value="15" min="0" max="100" step="0.1">
                                     </div>
-                                    <div class="mb-2">
-                                        <label class="form-label">{{ translate('commission_amount') }}</label>
+                                    <div class="mb-2 mt-3 pt-2 border-top">
+                                        <label class="form-label">{{ translate('commission_amount') }} ({{ translate('total') }})</label>
                                         <p class="fw-bold" id="commission-amount">0.00</p>
                                     </div>
                                     <div class="mb-2">
-                                        <label class="form-label">{{ translate('your_profit') }}</label>
+                                        <label class="form-label">{{ translate('your_profit') }} ({{ translate('total') }})</label>
                                         <p class="fw-bold text-success" id="your-profit">0.00</p>
                                     </div>
                                     <div class="mb-2">
-                                        <label class="form-label">{{ translate('customer_price') }}</label>
+                                        <label class="form-label">{{ translate('customer_price') }} ({{ translate('total') }})</label>
                                         <p class="fw-bold text-info" id="customer-price">0.00</p>
                                     </div>
                                 </div>
@@ -1119,9 +1136,113 @@
             src="https://platform-api.sharethis.com/js/sharethis.js#property=5f55f75bde227f0012147049&product=sticky-share-buttons"></script>
     
     <script>
-        $(document).ready(function() {
-            let originalPrice = 0;
+        let originalPrice = 0;
+
+        // Global function to calculate resell profit
+        function calculateResellProfit(changedInputId = 'resell-price') {
+            const qty = parseInt($('#resell-quantity').val()) || 1;
+            const resellUnitPrice = parseFloat($('#resell-price').val()) || 0;
+            const resellerUnitProfit = parseFloat($('#reseller-profit').val()) || 0;
+            const commissionRate = parseFloat($('#commission-rate').val()) || 0;
             
+            let calculatedResellUnitPrice = resellUnitPrice;
+            
+            // If profit per unit was changed, update resell price per unit
+            if (changedInputId === 'reseller-profit') {
+                if (resellerUnitProfit !== 0 || $('#reseller-profit').val() !== '') {
+                    calculatedResellUnitPrice = originalPrice + resellerUnitProfit;
+                    $('#resell-price').val(calculatedResellUnitPrice.toFixed(2));
+                }
+            } else if (changedInputId === 'resell-price') {
+                // Update profit per unit if resell price was changed
+                let unitProfit = calculatedResellUnitPrice - originalPrice;
+                if(unitProfit !== 0 || $('#resell-price').val() !== '') {
+                    $('#reseller-profit').val(unitProfit.toFixed(2));
+                }
+            }
+            
+            // Totals
+            const totalOriginalPrice = originalPrice * qty;
+            const totalResellPrice = calculatedResellUnitPrice * qty;
+            
+            // Calculate commission amount
+            const totalCommissionAmount = (totalResellPrice * commissionRate) / 100;
+            
+            // Calculate customer price (total resell price + total commission)
+            const totalCustomerPrice = totalResellPrice + totalCommissionAmount;
+            
+            // Calculate total profit
+            const totalProfit = totalResellPrice - totalOriginalPrice;
+            const profitMargin = originalPrice > 0 ? (((calculatedResellUnitPrice - originalPrice) / originalPrice) * 100) : 0;
+            
+            // Update display
+            $('#resell-original-price').text('{{ getCurrencySymbol(type: 'web') }}' + totalOriginalPrice.toFixed(2));
+            $('#resell-your-price').text('{{ getCurrencySymbol(type: 'web') }}' + totalResellPrice.toFixed(2));
+            $('#resell-profit-margin').text(profitMargin.toFixed(1) + '%');
+            $('#commission-amount').text('{{ getCurrencySymbol(type: 'web') }}' + totalCommissionAmount.toFixed(2));
+            $('#your-profit').text('{{ getCurrencySymbol(type: 'web') }}' + totalProfit.toFixed(2));
+            $('#customer-price').text('{{ getCurrencySymbol(type: 'web') }}' + totalCustomerPrice.toFixed(2));
+            
+            // Update profit color
+            if (totalProfit > 0) {
+                $('#your-profit').removeClass('text-danger').addClass('text-success');
+            } else if (totalProfit < 0) {
+                $('#your-profit').removeClass('text-success').addClass('text-danger');
+            } else {
+                $('#your-profit').removeClass('text-success text-danger');
+            }
+        }
+        
+        // Global function to open Resell Modal
+        function openResellModal() {
+            const button = $('.resell-now-button');
+            const productId = button.data('product-id');
+            const productName = button.data('product-name');
+            const productPrice = parseFloat(button.data('product-price'));
+            
+            // Get current quantity
+            const qtyInput = $('.product-details-cart-qty');
+            let currentQty = parseInt(qtyInput.val()) || 1;
+            let maxQty = parseInt(qtyInput.attr('max')) || 100;
+            let minQty = parseInt(qtyInput.attr('min')) || 1;
+            
+            // Get the dynamic price from page
+            let latestTotalPriceText = $('.product-details-chosen-price-amount').text();
+            // extract number considering potential currency formatting
+            let totalPriceVal = parseFloat(latestTotalPriceText.replace(/[^0-9.]/g, ''));
+            let unitPriceOriginal = productPrice;
+            if(totalPriceVal > 0 && currentQty > 0) {
+                unitPriceOriginal = totalPriceVal / currentQty;
+            }
+            
+            // Close dropdown
+            $('#buyNowDropdownMenu').removeClass('show');
+            $('#buyNowDropdownBtn').attr('aria-expanded', 'false');
+            
+            originalPrice = unitPriceOriginal;
+            
+            // Set modal data
+            $('#resell-product-name').text(productName);
+            if($('#resell-unit-price').length) {
+                $('#resell-unit-price').text('{{ getCurrencySymbol(type: 'web') }}' + originalPrice.toFixed(2));
+            }
+            
+            $('#resell-quantity').val(currentQty);
+            $('#resell-quantity').attr('max', maxQty);
+            $('#resell-quantity').attr('min', minQty);
+            
+            // Initialize input value
+            $('#resell-price').val(originalPrice.toFixed(2));
+            $('#reseller-profit').val('');
+            
+            // Calculate initial values
+            calculateResellProfit('resell-price');
+            
+            // Open modal using jQuery (compatible with Bootstrap 4)
+            $('#resellNowModal').modal('show');
+        }
+        
+        $(document).ready(function() {
             // Initialize Buy Now dropdown manually
             $('#buyNowDropdownBtn').on('click', function(e) {
                 e.preventDefault();
@@ -1161,32 +1282,6 @@
                 $(form).submit();
             });
             
-            // Function to open Resell Modal
-            function openResellModal() {
-                const button = $('.resell-now-button');
-                const productId = button.data('product-id');
-                const productName = button.data('product-name');
-                const productPrice = parseFloat(button.data('product-price'));
-                
-                // Close dropdown
-                $('#buyNowDropdownMenu').removeClass('show');
-                $('#buyNowDropdownBtn').attr('aria-expanded', 'false');
-                
-                originalPrice = productPrice;
-                
-                // Set modal data
-                $('#resell-product-name').text(productName);
-                $('#resell-original-price').text('{{ getCurrencySymbol(type: 'web') }}' + productPrice.toFixed(2));
-                $('#resell-price').val(productPrice.toFixed(2));
-                
-                // Calculate initial values
-                calculateResellProfit();
-                
-                // Open modal using Bootstrap 5
-                const modal = new bootstrap.Modal(document.getElementById('resellNowModal'));
-                modal.show();
-            }
-            
             // Handle Resell Now button click
             $('.resell-now-button').click(function(e) {
                 e.preventDefault();
@@ -1194,69 +1289,74 @@
                 openResellModal();
             });
             
-            // Calculate profit when resell price or profit input changes
-            $('#resell-price, #reseller-profit, #commission-rate').on('input', function() {
-                calculateResellProfit();
+            // Quantity buttons in modal
+            $('#resell-qty-plus').click(function() {
+                let qtyInput = $('#resell-quantity');
+                let curVal = parseInt(qtyInput.val()) || 1;
+                let max = parseInt(qtyInput.attr('max')) || 100;
+                if (curVal < max) {
+                    qtyInput.val(curVal + 1);
+                    calculateResellProfit('resell-price');
+                }
             });
             
-            function calculateResellProfit() {
-                const resellPrice = parseFloat($('#resell-price').val()) || 0;
-                const resellerProfit = parseFloat($('#reseller-profit').val()) || 0;
-                const commissionRate = parseFloat($('#commission-rate').val()) || 0;
-                
-                // If user enters profit, calculate resell price based on profit
-                let calculatedResellPrice = resellPrice;
-                if (resellerProfit > 0) {
-                    calculatedResellPrice = originalPrice + resellerProfit;
-                    $('#resell-price').val(calculatedResellPrice.toFixed(2));
+            $('#resell-qty-minus').click(function() {
+                let qtyInput = $('#resell-quantity');
+                let curVal = parseInt(qtyInput.val()) || 1;
+                let min = parseInt(qtyInput.attr('min')) || 1;
+                if (curVal > min) {
+                    qtyInput.val(curVal - 1);
+                    calculateResellProfit('resell-price');
                 }
-                
-                // Calculate commission amount
-                const commissionAmount = (calculatedResellPrice * commissionRate) / 100;
-                
-                // Calculate customer price (resell price + commission)
-                const customerPrice = calculatedResellPrice + commissionAmount;
-                
-                // Calculate profit
-                const profit = calculatedResellPrice - originalPrice;
-                const profitMargin = originalPrice > 0 ? ((profit / originalPrice) * 100) : 0;
-                
-                // Update display
-                $('#resell-your-price').text('{{ getCurrencySymbol(type: 'web') }}' + calculatedResellPrice.toFixed(2));
-                $('#resell-profit-margin').text(profitMargin.toFixed(1) + '%');
-                $('#commission-amount').text('{{ getCurrencySymbol(type: 'web') }}' + commissionAmount.toFixed(2));
-                $('#your-profit').text('{{ getCurrencySymbol(type: 'web') }}' + profit.toFixed(2));
-                $('#customer-price').text('{{ getCurrencySymbol(type: 'web') }}' + customerPrice.toFixed(2));
-                
-                // Update profit color
-                if (profit > 0) {
-                    $('#your-profit').removeClass('text-danger').addClass('text-success');
-                } else if (profit < 0) {
-                    $('#your-profit').removeClass('text-success').addClass('text-danger');
-                } else {
-                    $('#your-profit').removeClass('text-success text-danger');
+            });
+            
+            $('#resell-quantity').on('change', function() {
+                let qtyInput = $(this);
+                let curVal = parseInt(qtyInput.val()) || 1;
+                let min = parseInt(qtyInput.attr('min')) || 1;
+                let max = parseInt(qtyInput.attr('max')) || 100;
+                if (curVal < min) {
+                    qtyInput.val(min);
+                } else if (curVal > max) {
+                    qtyInput.val(max);
                 }
-            }
+                calculateResellProfit('resell-price');
+            });
+            
+            // Calculate profit when resell price or profit input changes
+            $('#resell-price, #reseller-profit, #commission-rate').on('input', function() {
+                calculateResellProfit($(this).attr('id'));
+            });
             
             // Handle confirm resell button
-            $('#confirm-resell-btn').click(function() {
+          $('#confirm-resell-btn').click(function(e) {
+    e.preventDefault();        // 🔥 MUST
+    e.stopPropagation();       // 🔥 MUST
                 const resellPrice = parseFloat($('#resell-price').val()) || 0;
                 const commissionRate = parseFloat($('#commission-rate').val()) || 0;
+                const qty = parseInt($('#resell-quantity').val()) || 1;
                 const productId = $('.resell-now-button').data('product-id');
                 
                 if (resellPrice <= 0) {
                     alert('{{ translate("please_enter_valid_price") }}');
                     return;
                 }
+
+                // Add to cart form data for properly having variation and color
+                let resellFormObj = {};
+               $('.add-to-cart-details-form').on('submit', function(e) {
+    e.preventDefault();
+});
                 
-                // Create resell product data
-                const resellData = {
+                // Create resell product data overriding form values
+                const resellData = Object.assign({}, resellFormObj, {
                     product_id: productId,
                     resell_price: resellPrice,
                     commission_rate: commissionRate,
                     customer_price: resellPrice + (resellPrice * commissionRate / 100),
-                    profit: resellPrice - originalPrice
-                };
+                    profit: resellPrice - originalPrice,
+                    quantity: qty
+                });
                 
                 // Submit resell request to add to cart
                 $.ajax({
@@ -1267,13 +1367,25 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
+                         console.log(response);
                         if (response.success) {
-                            alert('{{ translate("product_added_to_cart_for_resell") }}');
+                            // Show success toast
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success('{{ translate("product_successfully_added_for_resell") }}');
+                            } else {
+                                // Fallback to alert if toastr not available
+                                alert('{{ translate("product_successfully_added_for_resell") }}');
+                            }
                             $('#resellNowModal').modal('hide');
-                            // Redirect to cart/checkout like Buy for Self
-                            window.location.href = response.redirect_url || '{{ route("shop-cart") }}';
+                            // Redirect to home page
+                           window.location.href = response.redirect_url;
                         } else {
-                            alert(response.message || '{{ translate("something_went_wrong") }}');
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(response.message || '{{ translate("something_went_wrong") }}');
+                            } else {
+                                // Fallback to alert if toastr not available
+                                alert(response.message || '{{ translate("something_went_wrong") }}');
+                            }
                         }
                     },
                     error: function(xhr) {
