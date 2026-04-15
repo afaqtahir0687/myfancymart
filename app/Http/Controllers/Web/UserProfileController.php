@@ -32,11 +32,12 @@ use App\Utils\Helpers;
 use App\Utils\ImageManager;
 use App\Utils\OrderManager;
 use Brian2694\Toastr\Facades\Toastr;
-use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class UserProfileController extends Controller
 {
@@ -966,5 +967,23 @@ class UserProfileController extends Controller
 
         Toastr::success(translate('product_restock_request_removed_successfully'));
         return redirect()->route('user-restock-requests');
+    }
+
+    /**
+     * Show reseller dashboard
+     * @return View|RedirectResponse
+     */
+    public function resellerDashboard(): View|RedirectResponse
+    {
+        if (!Auth::guard('customer')->check()) {
+            Toastr::error(translate('please_login_first'));
+            return redirect()->route('customer.auth.login');
+        }
+
+        $customer = Auth::guard('customer')->user();
+        
+        // Get reseller products (you'll need to create ResellProduct model and repository)
+        // For now, show a basic dashboard with user info
+        return view('web-views.users-profile.reseller-dashboard', compact('customer'));
     }
 }

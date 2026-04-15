@@ -18,7 +18,9 @@ use App\Services\ProductService;
 use App\Traits\ProductTrait;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Arr;
@@ -490,6 +492,61 @@ class ProductDetailsController extends Controller
         }
 
         return response()->download($tempFilePath, $zipFileName)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Handle resell product request
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function resellProduct(Request $request): JsonResponse
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'resell_price' => 'required|numeric|min:0',
+            'commission_rate' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $product = $this->productRepo->getFirstWhere(params: ['id' => $request->product_id]);
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => translate('product_not_found')
+            ], 404);
+        }
+
+        // Check if user is logged in
+        if (!Auth::guard('customer')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => translate('please_login_to_resell')
+            ], 401);
+        }
+
+        $customer = Auth::guard('customer')->user();
+        
+        // Add product to cart with resell pricing
+        $cartData = [
+            'product_id' => $request->product_id,
+            'customer_id' => $customer->id,
+            'qty' => 1,
+            'price' => $request->resell_price,
+            'is_resell' => true,
+            'commission_rate' => $request->commission_rate,
+            'resell_commission' => $request->resell_price * $request->commission_rate / 100,
+            'resell_profit' => $request->resell_price - $product->unit_price,
+        ];
+
+        // Add to cart (you'll need to implement cart logic for resell products)
+        // For now, simulate adding to cart and redirect to checkout
+        session(['resell_cart_data' => $cartData]);
+
+        return response()->json([
+            'success' => true,
+            'message' => translate('product_added_to_cart_for_resell'),
+            'redirect_url' => route('shop-cart'), // Go to cart/checkout like Buy for Self
+            'data' => $cartData
+        ]);
     }
 
     /**

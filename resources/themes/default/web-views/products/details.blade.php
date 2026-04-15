@@ -414,14 +414,38 @@
                                                     {{ translate('add_to_cart') }}
                                                 </button>
                                             @else
-                                                <button type="button"
-                                                        class="btn btn-secondary element-center btn-gap-{{ Session::get('direction') === 'rtl' ? 'left' : 'right' }} product-buy-now-button"
-                                                        data-form=".add-to-cart-details-form"
-                                                        data-auth="{{ (getWebConfig(name: 'guest_checkout') == 1 || Auth::guard('customer')->check()) ? 'true' : 'false' }}"
-                                                        data-route="{{ route('shop-cart') }}"
-                                                >
-                                                    <span class="string-limit">{{ translate('buy_now') }}</span>
-                                                </button>
+                                                <div class="dropdown buy-now-dropdown">
+                                                    <button type="button"
+                                                            class="btn btn-secondary element-center btn-gap-{{ Session::get('direction') === 'rtl' ? 'left' : 'right' }}"
+                                                            id="buyNowDropdownBtn"
+                                                            data-auth="{{ (getWebConfig(name: 'guest_checkout') == 1 || Auth::guard('customer')->check()) ? 'true' : 'false' }}"
+                                                    >
+                                                        <span class="string-limit">{{ translate('buy_now') }} <i class="fa fa-chevron-down ms-1"></i></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu" id="buyNowDropdownMenu">
+                                                        <li>
+                                                            <a class="dropdown-item product-buy-now-button"
+                                                               href="javascript:void(0)"
+                                                               data-form=".add-to-cart-details-form"
+                                                               data-route="{{ route('shop-cart') }}"
+                                                               data-auth="{{ (getWebConfig(name: 'guest_checkout') == 1 || Auth::guard('customer')->check()) ? 'true' : 'false' }}"
+                                                            >
+                                                                <i class="fa fa-shopping-cart me-2"></i>{{ translate('buy_for_self') }}
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item resell-now-button"
+                                                               href="javascript:void(0)"
+                                                               onclick="openResellModal()"
+                                                               data-product-id="{{ $product->id }}"
+                                                               data-product-name="{{ $product->name }}"
+                                                               data-product-price="{{ getProductPriceByType(product: $product, type: 'discounted_unit_price', result: 'value') }}"
+                                                            >
+                                                                <i class="fa fa-refresh me-2"></i>{{ translate('resell_now') }}
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                                 <button
                                                     class="btn btn--primary element-center product-add-to-cart-button"
                                                     type="button"
@@ -1004,6 +1028,87 @@
 
     @include('layouts.front-end.partials.modal._chatting',['seller'=>$product->seller, 'user_type'=>$product->added_by])
 
+    <!-- Resell Now Modal -->
+    <div class="modal fade rtl text-align-direction" id="resellNowModal" tabindex="-1" role="dialog" aria-labelledby="resellNowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resellNowModalLabel">{{ translate('resell_now') }}</h5>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" fdprocessedid="tlvhd">
+            <span aria-hidden="true">×</span>
+        </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">{{ translate('product_details') }}</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="mb-2"><strong>{{ translate('product_name') }}:</strong> <span id="resell-product-name"></span></p>
+                                    <p class="mb-2"><strong>{{ translate('original_price') }}:</strong> <span id="resell-original-price"></span></p>
+                                    <p class="mb-2"><strong>{{ translate('your_price') }}:</strong> <span id="resell-your-price"></span></p>
+                                    <p class="mb-2"><strong>{{ translate('profit_margin') }}:</strong> <span id="resell-profit-margin"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3">{{ translate('commission_details') }}</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="resell-price" class="form-label">{{ translate('set_your_resell_price') }}</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">{{ getCurrencySymbol(type: 'web') }}</span>
+                                            <input type="number" class="form-control" id="resell-price" min="0" step="0.01">
+                                        </div>
+                                        <small class="text-muted">{{ translate('set_price_above_to_calculate_profit') }}</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="reseller-profit" class="form-label">{{ translate('your_profit_amount') }}</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">{{ getCurrencySymbol(type: 'web') }}</span>
+                                            <input type="number" class="form-control" id="reseller-profit" min="0" step="0.01" placeholder="0.00">
+                                        </div>
+                                        <small class="text-muted">{{ translate('enter_your_desired_profit') }}</small>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="commission-rate" class="form-label">{{ translate('commission_rate') }} (%)</label>
+                                        <input type="number" class="form-control" id="commission-rate" value="15" min="0" max="100" step="0.1">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">{{ translate('commission_amount') }}</label>
+                                        <p class="fw-bold" id="commission-amount">0.00</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">{{ translate('your_profit') }}</label>
+                                        <p class="fw-bold text-success" id="your-profit">0.00</p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">{{ translate('customer_price') }}</label>
+                                        <p class="fw-bold text-info" id="customer-price">0.00</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle me-2"></i>
+                                {{ translate('resell_info_text') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ translate('cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="confirm-resell-btn">{{ translate('confirm_resell') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <span id="route-review-list-product" data-url="{{ route('review-list-product') }}"></span>
     <span id="products-details-page-data" data-id="{{ $product['id'] }}"></span>
 @endsection
@@ -1012,4 +1117,171 @@
     <script src="{{ theme_asset(path: 'public/assets/front-end/js/product-details.js') }}"></script>
     <script type="text/javascript" async="async"
             src="https://platform-api.sharethis.com/js/sharethis.js#property=5f55f75bde227f0012147049&product=sticky-share-buttons"></script>
+    
+    <script>
+        $(document).ready(function() {
+            let originalPrice = 0;
+            
+            // Initialize Buy Now dropdown manually
+            $('#buyNowDropdownBtn').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $('#buyNowDropdownMenu').toggleClass('show');
+                $(this).attr('aria-expanded', $(this).attr('aria-expanded') === 'true' ? 'false' : 'true');
+            });
+            
+            // Close dropdown when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.buy-now-dropdown').length) {
+                    $('#buyNowDropdownMenu').removeClass('show');
+                    $('#buyNowDropdownBtn').attr('aria-expanded', 'false');
+                }
+            });
+            
+            // Handle Buy for Self button click
+            $('.product-buy-now-button').click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const form = $(this).data('form');
+                const route = $(this).data('route');
+                const auth = $(this).data('auth');
+                
+                // Close dropdown
+                $('#buyNowDropdownMenu').removeClass('show');
+                $('#buyNowDropdownBtn').attr('aria-expanded', 'false');
+                
+                if (auth === 'false') {
+                    // Redirect to login if not authenticated
+                    window.location.href = '{{ route("customer.auth.login") }}';
+                    return;
+                }
+                
+                // Submit form to cart (existing functionality)
+                $(form).submit();
+            });
+            
+            // Function to open Resell Modal
+            function openResellModal() {
+                const button = $('.resell-now-button');
+                const productId = button.data('product-id');
+                const productName = button.data('product-name');
+                const productPrice = parseFloat(button.data('product-price'));
+                
+                // Close dropdown
+                $('#buyNowDropdownMenu').removeClass('show');
+                $('#buyNowDropdownBtn').attr('aria-expanded', 'false');
+                
+                originalPrice = productPrice;
+                
+                // Set modal data
+                $('#resell-product-name').text(productName);
+                $('#resell-original-price').text('{{ getCurrencySymbol(type: 'web') }}' + productPrice.toFixed(2));
+                $('#resell-price').val(productPrice.toFixed(2));
+                
+                // Calculate initial values
+                calculateResellProfit();
+                
+                // Open modal using Bootstrap 5
+                const modal = new bootstrap.Modal(document.getElementById('resellNowModal'));
+                modal.show();
+            }
+            
+            // Handle Resell Now button click
+            $('.resell-now-button').click(function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openResellModal();
+            });
+            
+            // Calculate profit when resell price or profit input changes
+            $('#resell-price, #reseller-profit, #commission-rate').on('input', function() {
+                calculateResellProfit();
+            });
+            
+            function calculateResellProfit() {
+                const resellPrice = parseFloat($('#resell-price').val()) || 0;
+                const resellerProfit = parseFloat($('#reseller-profit').val()) || 0;
+                const commissionRate = parseFloat($('#commission-rate').val()) || 0;
+                
+                // If user enters profit, calculate resell price based on profit
+                let calculatedResellPrice = resellPrice;
+                if (resellerProfit > 0) {
+                    calculatedResellPrice = originalPrice + resellerProfit;
+                    $('#resell-price').val(calculatedResellPrice.toFixed(2));
+                }
+                
+                // Calculate commission amount
+                const commissionAmount = (calculatedResellPrice * commissionRate) / 100;
+                
+                // Calculate customer price (resell price + commission)
+                const customerPrice = calculatedResellPrice + commissionAmount;
+                
+                // Calculate profit
+                const profit = calculatedResellPrice - originalPrice;
+                const profitMargin = originalPrice > 0 ? ((profit / originalPrice) * 100) : 0;
+                
+                // Update display
+                $('#resell-your-price').text('{{ getCurrencySymbol(type: 'web') }}' + calculatedResellPrice.toFixed(2));
+                $('#resell-profit-margin').text(profitMargin.toFixed(1) + '%');
+                $('#commission-amount').text('{{ getCurrencySymbol(type: 'web') }}' + commissionAmount.toFixed(2));
+                $('#your-profit').text('{{ getCurrencySymbol(type: 'web') }}' + profit.toFixed(2));
+                $('#customer-price').text('{{ getCurrencySymbol(type: 'web') }}' + customerPrice.toFixed(2));
+                
+                // Update profit color
+                if (profit > 0) {
+                    $('#your-profit').removeClass('text-danger').addClass('text-success');
+                } else if (profit < 0) {
+                    $('#your-profit').removeClass('text-success').addClass('text-danger');
+                } else {
+                    $('#your-profit').removeClass('text-success text-danger');
+                }
+            }
+            
+            // Handle confirm resell button
+            $('#confirm-resell-btn').click(function() {
+                const resellPrice = parseFloat($('#resell-price').val()) || 0;
+                const commissionRate = parseFloat($('#commission-rate').val()) || 0;
+                const productId = $('.resell-now-button').data('product-id');
+                
+                if (resellPrice <= 0) {
+                    alert('{{ translate("please_enter_valid_price") }}');
+                    return;
+                }
+                
+                // Create resell product data
+                const resellData = {
+                    product_id: productId,
+                    resell_price: resellPrice,
+                    commission_rate: commissionRate,
+                    customer_price: resellPrice + (resellPrice * commissionRate / 100),
+                    profit: resellPrice - originalPrice
+                };
+                
+                // Submit resell request to add to cart
+                $.ajax({
+                    url: '{{ route("resell.product") }}',
+                    method: 'POST',
+                    data: resellData,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('{{ translate("product_added_to_cart_for_resell") }}');
+                            $('#resellNowModal').modal('hide');
+                            // Redirect to cart/checkout like Buy for Self
+                            window.location.href = response.redirect_url || '{{ route("shop-cart") }}';
+                        } else {
+                            alert(response.message || '{{ translate("something_went_wrong") }}');
+                        }
+                    },
+                    error: function(xhr) {
+                        const error = xhr.responseJSON;
+                        alert(error.message || '{{ translate("something_went_wrong") }}');
+                    }
+                });
+            });
+        });
+    </script>
 @endpush

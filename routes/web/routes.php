@@ -139,6 +139,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
     Route::controller(ProductDetailsController::class)->group(function () {
         Route::get('/product/{slug}', 'index')->name('product');
         Route::get('/product/{slug}/download', 'downloadImages')->name('product.download');
+        Route::post('/resell-product', 'resellProduct')->name('resell.product');
     });
 
     Route::controller(ProductListController::class)->group(function () {
@@ -196,6 +197,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
         Route::post('user-account-update', 'getUserProfileUpdate')->name('user-update')->middleware('customer');
         Route::post('user-account-picture', 'user_picture')->name('user-picture');
         Route::get('account-address-add', 'account_address_add')->name('account-address-add');
+        Route::get('reseller/dashboard', 'resellerDashboard')->name('reseller.dashboard')->middleware('customer');
         Route::get('account-address', 'account_address')->name('account-address');
         Route::post('account-address-store', 'address_store')->name('address-store');
         Route::get('account-address-delete', 'address_delete')->name('address-delete');
