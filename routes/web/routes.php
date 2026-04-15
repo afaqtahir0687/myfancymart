@@ -138,6 +138,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
 
     Route::controller(ProductDetailsController::class)->group(function () {
         Route::get('/product/{slug}', 'index')->name('product');
+        Route::get('/product/{slug}/download', 'downloadImages')->name('product.download');
     });
 
     Route::controller(ProductListController::class)->group(function () {

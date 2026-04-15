@@ -85,6 +85,18 @@
                                         </div>
                                     </button>
 
+                                    <a href="{{ route('product.download', $product->slug) }}" 
+                                       class="btn __text-18px border download-btn"
+                                       title="{{ translate('download_product_images') }}">
+                                        <i class="fa fa-download web-text-primary" aria-hidden="true"></i>
+                                        <div class="download-tooltip" x-placement="top">
+                                            <div class="arrow"></div>
+                                            <div class="inner">
+                                                <span>{{ translate('download_product_images') }}</span>
+                                            </div>
+                                        </div>
+                                    </a>
+
                                     <div class="sharethis-inline-share-buttons share--icons text-align-direction">
                                     </div>
                                 </div>

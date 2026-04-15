@@ -19,8 +19,13 @@ use App\Traits\ProductTrait;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use ZipArchive;
 
 class ProductDetailsController extends Controller
 {
@@ -428,5 +433,125 @@ class ProductDetailsController extends Controller
 
         Toastr::error(translate('not_found'));
         return back();
+    }
+
+    /**
+     * Download product images as ZIP file
+     * @param string $slug
+     * @return Response|BinaryFileResponse
+     */
+    public function downloadImages(string $slug): Response|BinaryFileResponse
+    {
+        $product = $this->productRepo->getWebFirstWhereActive(
+            params: ['slug' => $slug],
+            relations: []
+        );
+
+        if (!$product) {
+            abort(404);
+        }
+
+        $zipFileName = Str::slug($product->name) . '-images.zip';
+        $zip = new ZipArchive();
+
+        $tempFilePath = storage_path('app/temp/' . $zipFileName);
+        
+        // Ensure temp directory exists
+        if (!Storage::exists('temp')) {
+            Storage::makeDirectory('temp');
+        }
+
+        if ($zip->open($tempFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            // Add thumbnail image
+            if (!empty($product->thumbnail)) {
+                $thumbnailPath = $this->getLocalImagePath($product->thumbnail, 'product/thumbnail');
+                if (file_exists($thumbnailPath)) {
+                    $zip->addFile($thumbnailPath, 'thumbnail-' . basename($thumbnailPath));
+                }
+            }
+
+            // Add product images
+            $images = is_array($product->images) ? $product->images : json_decode($product->images);
+            if ($images) {
+                foreach ($images as $index => $image) {
+                    $imageName = is_object($image) ? $image->image_name : $image;
+                    $imagePath = $this->getLocalImagePath($imageName, 'product');
+                    if (file_exists($imagePath)) {
+                        $zip->addFile($imagePath, 'image-' . ($index + 1) . '-' . basename($imagePath));
+                    }
+                }
+            }
+
+            // Create a text file with product information including size
+            $productInfo = $this->generateProductInfoText($product);
+            $zip->addFromString('product-info.txt', $productInfo);
+
+            $zip->close();
+        }
+
+        return response()->download($tempFilePath, $zipFileName)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Get local file path from storage
+     */
+    private function getLocalImagePath(string $filename, string $directory): string
+    {
+        // Check if file exists in public storage
+        $publicPath = public_path($directory . '/' . $filename);
+        if (file_exists($publicPath)) {
+            return $publicPath;
+        }
+
+        // Check storage/app/public
+        $storagePath = storage_path('app/public/' . $directory . '/' . $filename);
+        if (file_exists($storagePath)) {
+            return $storagePath;
+        }
+
+        // Return default path if not found
+        return $publicPath;
+    }
+
+    /**
+     * Generate product information text file
+     */
+    private function generateProductInfoText(Product $product): string
+    {
+        $info = "PRODUCT INFORMATION\n";
+        $info .= "==================\n\n";
+        $info .= "Name: " . $product->name . "\n";
+        $info .= "Code: " . ($product->code ?? 'N/A') . "\n";
+        $info .= "Slug: " . $product->slug . "\n";
+        $info .= "Price: " . currencyConverter($product->unit_price) . "\n";
+        $info .= "Discount: " . ($product->discount ?? 0) . "\n";
+        $info .= "Stock: " . $product->current_stock . "\n";
+        $info .= "Minimum Order Qty: " . $product->minimum_order_qty . "\n";
+        $info .= "Unit: " . ($product->unit ?? 'N/A') . "\n";
+        $info .= "Product Type: " . $product->product_type . "\n";
+        
+        // Add size information if available
+        if (!empty($product->details)) {
+            $info .= "\nDetails:\n" . strip_tags($product->details) . "\n";
+        }
+
+        // Add variation information if available
+        if (!empty($product->variation)) {
+            $variations = json_decode($product->variation, true);
+            if ($variations) {
+                $info .= "\nVariations:\n";
+                foreach ($variations as $index => $variation) {
+                    $info .= "- Variation " . ($index + 1) . ":\n";
+                    if (isset($variation['type'])) $info .= "  Type: " . $variation['type'] . "\n";
+                    if (isset($variation['price'])) $info .= "  Price: " . currencyConverter($variation['price']) . "\n";
+                    if (isset($variation['qty'])) $info .= "  Quantity: " . $variation['qty'] . "\n";
+                    if (isset($variation['size'])) $info .= "  Size: " . $variation['size'] . "\n";
+                }
+            }
+        }
+
+        $info .= "\nDownloaded on: " . date('Y-m-d H:i:s') . "\n";
+        
+        return $info;
     }
 }
