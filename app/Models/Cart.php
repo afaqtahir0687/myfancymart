@@ -89,6 +89,10 @@ class Cart extends Model
         'shipping_cost',
         'shipping_type',
         'is_guest',
+        'is_resell',
+        'commission_rate',
+        'resell_commission',
+        'resell_profit',
     ];
 
     public function cartShipping(): HasOne

@@ -18,6 +18,13 @@
                     @php($subTotal += $cartItem['price'] * $cartItem['quantity'])
                     @php($totalTax += $cartItem['tax_model'] == 'exclude' ? $cartItem['tax'] * $cartItem['quantity'] : 0)
                     @php($totalDiscountOnProduct += $cartItem['discount'] * $cartItem['quantity'])
+                   
+                    @php($resellProfit = 0)
+                    @php($resellCommission = 0)
+                    @if(isset($cartItem['is_resell']) && $cartItem['is_resell'] == 1)
+                        @php($resellProfit = ($cartItem['resell_profit'] ?? 0) * $cartItem['quantity'])
+                        @php($resellCommission = ($cartItem['resell_commission'] ?? 0) * $cartItem['quantity'])
+                    @endif
                 @endforeach
 
                 @if (session()->missing('coupon_type') || session('coupon_type') != 'free_delivery')
@@ -70,6 +77,22 @@
                     - {{ webCurrencyConverter(amount: $totalDiscountOnProduct) }}
                 </span>
             </div>
+            @if(isset($resellProfit) && $resellProfit > 0)
+                <div class="d-flex justify-content-between">
+                    <span class="cart_title text-success">{{ translate('resell_profit') }}</span>
+                    <span class="cart_value text-success">
+                        {{ webCurrencyConverter(amount: $resellProfit) }}
+                    </span>
+                </div>
+            @endif
+            @if(isset($resellCommission) && $resellCommission > 0)
+                <div class="d-flex justify-content-between">
+                    <span class="cart_title text-info">{{ translate('resell_commission') }}</span>
+                    <span class="cart_value text-info">
+                        {{ webCurrencyConverter(amount: $resellCommission) }}
+                    </span>
+                </div>
+            @endif
 
             <?php
                 $coupon_dis = 0;
@@ -78,7 +101,7 @@
                     $coupon_dis = $couponDiscount;
                 }
 
-                $totalAmount = $subTotal + $totalTax + $totalShippingCost - $coupon_dis - $totalDiscountOnProduct;
+                $totalAmount = $subTotal + $totalTax + $totalShippingCost - $coupon_dis - $totalDiscountOnProduct + ($resellCommission ?? 0) + ($resellProfit ?? 0);
                 $referralAmount = \App\Utils\CustomerManager::getReferralDiscountAmount(
                     user: (auth('customer')->check() ? auth('customer')->user() : null),
                     couponDiscount: $coupon_dis

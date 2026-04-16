@@ -366,35 +366,16 @@ class OrderManager
             ];
         }
 
-        $coupon = $firstCoupon['coupon_type'] == 'first_order' ? $firstCoupon : ($firstCoupon['limit'] > $couponLimit ? $firstCoupon : null);
+       $coupon = $firstCoupon['coupon_type'] == 'first_order'
+    ? $firstCoupon
+    : ($firstCoupon['limit'] > $couponLimit ? $firstCoupon : null);
 
-        if ($coupon && $coupon['coupon_type'] == 'first_order') {
-            if (Order::where(['customer_id' => $user['id']])->count() > 0) {
-                return [
-                    'status' => false,
-                    'messages' => translate('sorry_this_coupon_is_not_valid_for_this_user') . '!',
-                ];
-            }
-        }
-
-        $cartList = CartManager::getCartListQueryAPI(request: $request, type: 'checked');
-        if (count($cartList) <= 0) {
-            return [
-                'status' => false,
-                'messages' => translate('Please_add_item_to_cart')
-            ];
-        }
-
-        $couponType = $coupon->coupon_type;
-        $couponDiscountType = $coupon->discount_type;
-        $couponDiscount = $coupon->discount;
-
-        if ($coupon->coupon_type != 'first_order' && $coupon['customer_id'] != 0 && $coupon['customer_id'] != $user['id']) {
-            return [
-                'status' => false,
-                'messages' => translate('coupon_not_valid')
-            ];
-        }
+if (!$coupon) {
+    return [
+        'status' => false,
+        'messages' => translate('coupon_not_valid')
+    ];
+}
 
         $onlyProductTotalAmount = 0;
         if ($coupon->coupon_type == 'first_order') {
@@ -1537,6 +1518,9 @@ class OrderManager
             'coupon_discount' => $couponDiscount,
             'referral_discount' => $referAndEarnDiscount,
             'total_refundable_amount' => $subtotal - $couponDiscount - $referAndEarnDiscount,
+            'resell_profit' => $orderDetails->resell_profit ?? 0,
+            'is_resell' => $orderDetails->is_resell ?? 0,
+            'commission_rate' => $orderDetails->commission_rate ?? 0,
         ];
     }
 
