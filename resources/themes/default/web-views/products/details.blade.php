@@ -427,7 +427,7 @@
                                                             <a class="dropdown-item product-buy-now-button"
                                                                href="javascript:void(0)"
                                                                data-form=".add-to-cart-details-form"
-                                                               data-route="{{ route('shop-cart') }}"
+                                                               data-route="{{ route('checkout-details') }}"
                                                                data-auth="{{ (getWebConfig(name: 'guest_checkout') == 1 || Auth::guard('customer')->check()) ? 'true' : 'false' }}"
                                                             >
                                                                 <i class="fa fa-shopping-cart me-2"></i>{{ translate('buy_for_self') }}
@@ -1377,8 +1377,8 @@
                                 alert('{{ translate("product_successfully_added_for_resell") }}');
                             }
                             $('#resellNowModal').modal('hide');
-                            // Redirect to home page
-                           window.location.href = response.redirect_url;
+                            // Redirect to checkout-details page like Buy for Self
+                           window.location.href = response.redirect_url || '{{ route("checkout-details") }}';
                         } else {
                             if (typeof toastr !== 'undefined') {
                                 toastr.error(response.message || '{{ translate("something_went_wrong") }}');

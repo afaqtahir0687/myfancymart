@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Contracts\Repositories\CartRepositoryInterface;
 use App\Contracts\Repositories\OrderDetailRepositoryInterface;
 use App\Contracts\Repositories\ProductCompareRepositoryInterface;
 use App\Contracts\Repositories\ProductRepositoryInterface;
@@ -28,6 +29,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use ZipArchive;
+use App\Contracts\Repositories\CartItemRepositoryInterface;
+
 
 class ProductDetailsController extends Controller
 {
@@ -44,6 +47,9 @@ class ProductDetailsController extends Controller
         private readonly TagRepositoryInterface            $tagRepo,
         private readonly SellerRepositoryInterface         $sellerRepo,
         private readonly ProductService                    $productService,
+        private readonly CartRepositoryInterface           $cartRepo,
+        private readonly CartItemRepositoryInterface       $cartItemRepo,
+        
     )
     {
     }
@@ -537,15 +543,32 @@ class ProductDetailsController extends Controller
             'resell_profit' => $request->resell_price - $product->unit_price,
         ];
 
-        // Add to cart (you'll need to implement cart logic for resell products)
-        // For now, simulate adding to cart and redirect to checkout
-        session(['resell_cart_data' => $cartData]);
+        // Add product to cart with resell pricing using existing Cart table structure
+        $cartGroupData = [
+            'customer_id' => $customer->id,
+            'cart_group_id' => uniqid(),
+            'product_id' => $request->product_id,
+            'quantity' => $request->quantity ?? 1,
+            'price' => $request->resell_price,
+            'is_resell' => 1,
+            'commission_rate' => $request->commission_rate,
+            'resell_commission' => $request->resell_price * $request->commission_rate / 100,
+            'resell_profit' => $request->resell_price - $product->unit_price,
+            'product_type' => $product->product_type,
+            'seller_id' => $product->user_id,
+            'seller_is' => $product->added_by,
+            'slug' => $product->slug,
+            'name' => $product->name,
+            'thumbnail' => $product->thumbnail,
+        ];
+
+        $cart = $this->cartRepo->add($cartGroupData);
 
         return response()->json([
             'success' => true,
             'message' => translate('product_added_to_cart_for_resell'),
-            'redirect_url' => route('shop-cart'), // Go to cart/checkout like Buy for Self
-            'data' => $cartData
+            'redirect_url' => route('checkout-details'),
+            'data' => $cart
         ]);
     }
 

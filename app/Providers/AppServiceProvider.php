@@ -29,7 +29,8 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-
+use App\Contracts\Repositories\CartItemRepositoryInterface;
+use App\Repositories\CartItemRepository;
 ini_set('memory_limit', -1);
 ini_set('upload_max_filesize', '180M');
 ini_set('post_max_size', '200M');
@@ -48,12 +49,14 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register(): void
-    {
-        if ($this->app->isLocal()) {
-            $this->app->register(\Amirami\Localizator\ServiceProvider::class);
-        }
+  public function register(): void
+{
+    if ($this->app->isLocal()) {
+        $this->app->register(\Amirami\Localizator\ServiceProvider::class);
     }
+
+    $this->app->bind(CartItemRepositoryInterface::class, CartItemRepository::class);
+}
 
     /**
      * Bootstrap any application services.
