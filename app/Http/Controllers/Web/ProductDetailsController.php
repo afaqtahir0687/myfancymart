@@ -530,7 +530,6 @@ class ProductDetailsController extends Controller
 
         $customer = Auth::guard('customer')->user();
         
-        // Add product to cart with resell pricing
         $cartData = [
             'product_id' => $request->product_id,
             'customer_id' => $customer->id,
@@ -542,7 +541,6 @@ class ProductDetailsController extends Controller
             'resell_profit' => $request->resell_price - $product->unit_price,
         ];
 
-        // Add product to cart with resell pricing using existing Cart table structure
         $cartGroupData = [
             'customer_id' => $customer->id,
             'cart_group_id' => uniqid(),
