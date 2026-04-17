@@ -1061,7 +1061,7 @@
                                     <p class="mb-2"><strong>{{ translate('unit_price') }}:</strong> <span id="resell-unit-price"></span></p>
                                     <p class="mb-2"><strong>{{ translate('original_price') }} ({{ translate('total') }}):</strong> <span id="resell-original-price"></span></p>
                                     <p class="mb-2"><strong>{{ translate('your_price') }} ({{ translate('total') }}):</strong> <span id="resell-your-price"></span></p>
-                                    <p class="mb-2"><strong>{{ translate('profit_margin') }}:</strong> <span id="resell-profit-margin"></span></p>
+                                    <!-- <p class="mb-2"><strong>{{ translate('profit_margin') }}:</strong> <span id="resell-profit-margin"></span></p> -->
                                 </div>
                             </div>
                         </div>
