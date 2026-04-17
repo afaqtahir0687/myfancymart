@@ -1089,14 +1089,7 @@
                                         </div>
                                         <small class="text-muted">{{ translate('enter_your_desired_profit') }}</small>
                                     </div>
-                                    <div class="mb-2">
-                                        <label for="commission-rate" class="form-label">{{ translate('commission_rate') }} (%)</label>
-                                        <input type="number" class="form-control" id="commission-rate" value="15" min="0" max="100" step="0.1">
-                                    </div>
-                                    <div class="mb-2 mt-3 pt-2 border-top">
-                                        <label class="form-label">{{ translate('commission_amount') }} ({{ translate('total') }})</label>
-                                        <p class="fw-bold" id="commission-amount">0.00</p>
-                                    </div>
+
                                     <div class="mb-2">
                                         <label class="form-label">{{ translate('your_profit') }} ({{ translate('total') }})</label>
                                         <p class="fw-bold text-success" id="your-profit">0.00</p>
@@ -1143,7 +1136,7 @@
             const qty = parseInt($('#resell-quantity').val()) || 1;
             const resellUnitPrice = parseFloat($('#resell-price').val()) || 0;
             const resellerUnitProfit = parseFloat($('#reseller-profit').val()) || 0;
-            const commissionRate = parseFloat($('#commission-rate').val()) || 0;
+            const commissionRate = 0;
             
             let calculatedResellUnitPrice = resellUnitPrice;
             
@@ -1179,7 +1172,7 @@
             $('#resell-original-price').text('{{ getCurrencySymbol(type: 'web') }}' + totalOriginalPrice.toFixed(2));
             $('#resell-your-price').text('{{ getCurrencySymbol(type: 'web') }}' + totalResellPrice.toFixed(2));
             $('#resell-profit-margin').text(profitMargin.toFixed(1) + '%');
-            $('#commission-amount').text('{{ getCurrencySymbol(type: 'web') }}' + totalCommissionAmount.toFixed(2));
+
             $('#your-profit').text('{{ getCurrencySymbol(type: 'web') }}' + totalProfit.toFixed(2));
             $('#customer-price').text('{{ getCurrencySymbol(type: 'web') }}' + totalCustomerPrice.toFixed(2));
             
@@ -1324,7 +1317,7 @@
             });
             
             // Calculate profit when resell price or profit input changes
-            $('#resell-price, #reseller-profit, #commission-rate').on('input', function() {
+            $('#resell-price, #reseller-profit').on('input', function() {
                 calculateResellProfit($(this).attr('id'));
             });
             
@@ -1333,7 +1326,7 @@
     e.preventDefault();        // 🔥 MUST
     e.stopPropagation();       // 🔥 MUST
                 const resellPrice = parseFloat($('#resell-price').val()) || 0;
-                const commissionRate = parseFloat($('#commission-rate').val()) || 0;
+                const commissionRate = 0;
                 const qty = parseInt($('#resell-quantity').val()) || 1;
                 const productId = $('.resell-now-button').data('product-id');
                 

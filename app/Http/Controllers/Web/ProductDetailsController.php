@@ -510,7 +510,6 @@ class ProductDetailsController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'resell_price' => 'required|numeric|min:0',
-            'commission_rate' => 'required|numeric|min:0|max:100',
         ]);
 
         $product = $this->productRepo->getFirstWhere(params: ['id' => $request->product_id]);
@@ -538,8 +537,8 @@ class ProductDetailsController extends Controller
             'qty' => 1,
             'price' => $request->resell_price,
             'is_resell' => true,
-            'commission_rate' => $request->commission_rate,
-            'resell_commission' => $request->resell_price * $request->commission_rate / 100,
+            'commission_rate' => 0,
+            'resell_commission' => 0,
             'resell_profit' => $request->resell_price - $product->unit_price,
         ];
 
@@ -551,8 +550,8 @@ class ProductDetailsController extends Controller
             'quantity' => $request->quantity ?? 1,
             'price' => $request->resell_price,
             'is_resell' => 1,
-            'commission_rate' => $request->commission_rate,
-            'resell_commission' => $request->resell_price * $request->commission_rate / 100,
+            'commission_rate' => 0,
+            'resell_commission' => 0,
             'resell_profit' => $request->resell_price - $product->unit_price,
             'product_type' => $product->product_type,
             'seller_id' => $product->user_id,
