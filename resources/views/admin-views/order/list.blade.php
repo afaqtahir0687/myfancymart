@@ -179,6 +179,8 @@
                                     <th class="text-capitalize">{{ translate('customer_info') }}</th>
                                     <th>{{ translate('store') }}</th>
                                     <th class="text-capitalize">{{ translate('total_amount') }}</th>
+                                    <th class="text-capitalize">{{ translate('Profit') }}</th>
+                                    <th class="text-capitalize">{{ translate('Net_Cost') }}</th>
                                     @if ($status == 'all')
                                         <th class="text-center">{{ translate('order_status') }} </th>
                                     @else
@@ -245,8 +247,8 @@
                                             @endif
                                         </td>
                                         <td>
+                                            @php($orderTotalPriceSummary = \App\Utils\OrderManager::getOrderTotalPriceSummary(order: $order))
                                             <div>
-                                                @php($orderTotalPriceSummary = \App\Utils\OrderManager::getOrderTotalPriceSummary(order: $order))
                                                 {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $orderTotalPriceSummary['totalAmount']), currencyCode: getCurrencyCode()) }}
                                             </div>
 
@@ -257,6 +259,16 @@
                                                 <span
                                                     class="badge badge-danger text-bg-danger">{{ translate('unpaid') }}</span>
                                             @endif
+                                        </td>
+                                        <td>
+                                            <div class="text-success font-bold">
+                                                {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $orderTotalPriceSummary['totalResellProfit']), currencyCode: getCurrencyCode()) }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-muted">
+                                                {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $orderTotalPriceSummary['totalAmount'] - $orderTotalPriceSummary['totalResellProfit']), currencyCode: getCurrencyCode()) }}
+                                            </div>
                                         </td>
                                         @if ($status == 'all')
                                             <td class="text-center text-capitalize">

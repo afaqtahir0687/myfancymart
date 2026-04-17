@@ -588,38 +588,17 @@
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            @endif
-
-                                            <tr>
-                                                <td>
-                                                    <div class="text-start">
-                                                        <span class="product-qty">
-                                                            {{translate('tax_fee')}}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="text-end">
-                                                        <span class="fs-15 font-semi-bold">
-                                                            {{ webCurrencyConverter(amount:  $orderTotalPriceSummary['taxTotal']) }}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-
-                                            @if($order->order_type == 'default_type' && $order?->is_shipping_free == 0)
+                                            @endif                                            @if($orderTotalPriceSummary['totalResellProfit'] > 0)
                                                 <tr>
                                                     <td>
                                                         <div class="text-start">
-                                                            <span class="product-qty">
-                                                                {{translate('shipping_Fee')}}
-                                                            </span>
+                                                            <span class="product-qty text-success">{{translate('your_profit')}}</span>
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <div class="text-end">
-                                                            <span class="fs-15 font-semi-bold">
-                                                                {{ webCurrencyConverter(amount:  $orderTotalPriceSummary['shippingTotal']) }}
+                                                            <span class="fs-15 font-semi-bold text-success">
+                                                                {{ webCurrencyConverter(amount: $orderTotalPriceSummary['totalResellProfit']) }}
                                                             </span>
                                                         </div>
                                                     </td>

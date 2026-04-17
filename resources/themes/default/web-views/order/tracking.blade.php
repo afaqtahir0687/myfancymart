@@ -58,6 +58,7 @@
                                 @php($total_tax=0)
                                 @php($total_shipping_cost=0)
                                 @php($total_discount_on_product=0)
+                                @php($total_resell_profit=0)
                                 @php($extra_discount=0)
                                 @php($coupon_discount=0)
                                 @foreach($order as $key=>$order_details)
@@ -75,11 +76,7 @@
                                                         <small class="fs-12">
                                                             <strong>{{translate('unit_price')}} :</strong>
                                                             {{ webCurrencyConverter(amount: $order_details['price']) }}
-                                                            @if ($order_details->tax_model =='include')
-                                                                ({{translate('tax_incl.')}})
-                                                            @else
-                                                                ({{ translate('tax').":".($productDetails->tax) }} {{ ($productDetails->tax_type ==="percent" ? '%' :'') }})
-                                                            @endif
+
                                                         </small>
                                                         @if ($order_details->variant)
                                                             <small class="fs-12">
@@ -124,6 +121,7 @@
                                     @php($sub_total+=$order_details['price']*$order_details['qty'])
                                     @php($total_tax+=$order_details['tax'])
                                     @php($total_discount_on_product+=$order_details['discount'])
+                                    @php($total_resell_profit+=($order_details['resell_profit'] ?? 0) * $order_details['qty'])
                                 @endforeach
                                 </tbody>
 
@@ -149,14 +147,14 @@
                                 <thead>
                                 <tr class="fs-14 font-semibold">
                                     <th class="text-muted font-semibold">{{translate('sub_total')}}</th>
-                                    @if ($orderDetails['order_type'] == 'default_type')
-                                        <th class="text-muted font-semibold">{{translate('shipping')}}</th>
-                                    @endif
-                                    <th class="text-muted font-semibold">{{translate('tax')}}</th>
+
                                     <th class="text-muted font-semibold">{{translate('discount')}}</th>
                                     <th class="text-muted font-semibold">{{translate('coupon_discount')}}</th>
                                     @if ($orderDetails['order_type'] == 'POS')
                                         <th class="text-muted font-semibold">{{translate('extra_discount')}}</th>
+                                    @endif
+                                    @if($total_resell_profit > 0)
+                                        <th class="text-muted font-semibold">{{translate('profit')}}</th>
                                     @endif
                                     <th class="text-muted font-semibold">{{translate('total')}}</th>
                                 </tr>
@@ -166,16 +164,7 @@
                                     <td class="text-dark">
                                         {{ webCurrencyConverter(amount: $sub_total) }}
                                     </td>
-                                    @if ($orderDetails['order_type'] == 'default_type')
-                                        <td class="text-dark">
-                                            {{ webCurrencyConverter(amount: $orderDetails['is_shipping_free'] ? $total_shipping_cost-$orderDetails['extra_discount']:$total_shipping_cost) }}
-                                        </td>
 
-                                    @endif
-
-                                    <td class="text-dark">
-                                        {{ webCurrencyConverter(amount: $total_tax) }}
-                                    </td>
                                     <td class="text-dark">
                                         -{{ webCurrencyConverter(amount: $total_discount_on_product) }}
                                     </td>
@@ -187,8 +176,13 @@
                                             - {{ webCurrencyConverter(amount: $extra_discount) }}
                                         </td>
                                     @endif
+                                    @if($total_resell_profit > 0)
+                                        <td class="text-success">
+                                            {{ webCurrencyConverter(amount: $total_resell_profit) }}
+                                        </td>
+                                    @endif
                                     <td class="text-dark">
-                                        {{ webCurrencyConverter(amount: $sub_total+$total_tax+$total_shipping_cost-($orderDetails->discount)-$total_discount_on_product - $coupon_discount - $extra_discount) }}
+                                        {{ webCurrencyConverter(amount: $sub_total + $total_resell_profit - ($orderDetails->discount) - $total_discount_on_product - $coupon_discount - $extra_discount) }}
                                     </td>
                                 </tr>
                                 </tbody>
@@ -201,6 +195,34 @@
     </div>
 
     <div class="container pt-4 pb-5 rtl">
+
+        @if($total_resell_profit > 0)
+        <!-- Resell Profit Summary Card -->
+        <div class="card mb-4 border-0 box-shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="{{ theme_asset(path: 'public/assets/front-end/img/cart/resell.png') }}" width="24" alt="">
+                        <h5 class="mb-0 fs-16 font-bold text-success">{{ translate('resell_Profit_Details') }}</h5>
+                    </div>
+                    <div class="d-flex gap-4">
+                        <div class="text-center">
+                            <p class="mb-1 fs-12 text-muted">{{ translate('sub_total') }}</p>
+                            <h6 class="mb-0 fs-14 font-bold">{{ webCurrencyConverter(amount: $sub_total) }}</h6>
+                        </div>
+                        <div class="text-center">
+                            <p class="mb-1 fs-12 text-muted">{{ translate('resell_Profit') }}</p>
+                            <h6 class="mb-0 fs-14 font-bold text-success">+ {{ webCurrencyConverter(amount: $total_resell_profit) }}</h6>
+                        </div>
+                        <div class="text-center">
+                            <p class="mb-1 fs-12 text-muted">{{ translate('total_Amount') }}</p>
+                            <h6 class="mb-0 fs-14 font-bold text-primary">{{ webCurrencyConverter(amount: $sub_total + $total_resell_profit - ($orderDetails->discount) - $total_discount_on_product - $coupon_discount - $extra_discount) }}</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <div class="card border-0 box-shadow-lg">
             <div class="card-body py-5">

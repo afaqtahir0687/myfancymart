@@ -16,7 +16,7 @@
             @if ($cart->count() > 0)
                 @foreach ($cart as $key => $cartItem)
                     @php($subTotal += $cartItem['price'] * $cartItem['quantity'])
-                    @php($totalTax += $cartItem['tax_model'] == 'exclude' ? $cartItem['tax'] * $cartItem['quantity'] : 0)
+                    @php($totalTax += 0) {{-- Tax forced to 0 as per request --}}
                     @php($totalDiscountOnProduct += $cartItem['discount'] * $cartItem['quantity'])
                    
                     @php($resellProfit = 0)
@@ -27,11 +27,7 @@
                     @endif
                 @endforeach
 
-                @if (session()->missing('coupon_type') || session('coupon_type') != 'free_delivery')
-                    @php($totalShippingCost = $getShippingCost - $getShippingCostSavedForFreeDelivery)
-                @else
-                    @php($totalShippingCost = $getShippingCost)
-                @endif
+                @php($totalShippingCost = 0) {{-- Shipping forced to 0 as per request --}}
             @endif
 
             @php($totalSavedAmount = $totalDiscountOnProduct)
@@ -59,18 +55,24 @@
                     {{ webCurrencyConverter(amount: $subTotal) }}
                 </span>
             </div>
+            {{-- Tax row removed as per request --}}
+            {{--
             <div class="d-flex justify-content-between">
                 <span class="cart_title">{{ translate('tax') }}</span>
                 <span class="cart_value">
                     {{ webCurrencyConverter(amount: $totalTax) }}
                 </span>
             </div>
+            --}}
+            {{-- Shipping row removed as per request --}}
+            {{--
             <div class="d-flex justify-content-between">
                 <span class="cart_title">{{ translate('shipping') }}</span>
                 <span class="cart_value">
                     {{ webCurrencyConverter(amount: $totalShippingCost) }}
                 </span>
             </div>
+            --}}
             <div class="d-flex justify-content-between">
                 <span class="cart_title">{{ translate('discount_on_product') }}</span>
                 <span class="cart_value">
@@ -236,7 +238,7 @@
     <div class="d-flex justify-content-center align-items-center fs-14 mb-2">
         <div class="product-description-label fw-semibold text-capitalize">{{ translate('total_price') }} :</div>
         &nbsp; <strong class="text-base">
-            {{ webCurrencyConverter(amount: $subTotal + $totalTax + $totalShippingCost - $coupon_dis - $totalDiscountOnProduct) }}
+            {{ webCurrencyConverter(amount: $subTotal + 0 + 0 - $coupon_dis - $totalDiscountOnProduct + ($resellProfit ?? 0) + ($resellCommission ?? 0)) }}
         </strong>
     </div>
 

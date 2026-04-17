@@ -161,7 +161,6 @@
                                     <th>{{translate('SL')}}</th>
                                     <th>{{translate('item_details')}}</th>
                                     <th>{{translate('item_price')}}</th>
-                                    <th>{{translate('tax')}}</th>
                                     <th>{{translate('item_discount')}}</th>
                                     <th>{{translate('total_price')}}</th>
                                 </tr>
@@ -192,11 +191,7 @@
                                                         <div>
                                                             <strong>{{translate('unit_price')}} :</strong>
                                                             {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $detail['price'] + ($detail->tax_model =='include' ? ($detail['tax'] / $detail['qty']) :0))) }}
-                                                            @if ($detail->tax_model =='include')
-                                                                ({{translate('tax_incl.')}})
-                                                            @else
-                                                                ({{translate('tax').":".($productDetails->tax)}}{{$productDetails->tax_type ==="percent" ? '%' :''}})
-                                                            @endif
+
 
                                                         </div>
                                                         @if ($detail->variant)
@@ -221,11 +216,9 @@
                                             <td>
                                                 {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $detail['price']*$detail['qty']), currencyCode: getCurrencyCode()) }}
                                             </td>
-                                            <td>
-                                                {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $detail['tax']), currencyCode: getCurrencyCode()) }}
-                                            </td>
+
                                             <td>{{setCurrencySymbol(amount: usdToDefaultCurrency(amount: $detail['discount']), currencyCode: getCurrencyCode())}}</td>
-                                            @php($subtotal=$detail['price']*$detail['qty']+$detail['tax']-$detail['discount'])
+                                            @php($subtotal=$detail['price']*$detail['qty']-$detail['discount'])
                                             <td>{{setCurrencySymbol(amount: usdToDefaultCurrency(amount: $subtotal), currencyCode: getCurrencyCode())}}</td>
                                         </tr>
                                         @php($item_price+=$detail['price']*$detail['qty'])
@@ -342,26 +335,16 @@
                                         </td>
                                     </tr>
                                     @endif
-                                    <tr>
-                                        <td class="text-end text-body text-uppercase"><strong>{{ translate('vat') }}/{{ translate('tax') }}</strong></td>
-                                        <td class="text-end text-dark">
-                                            <strong>{{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $orderTotalPriceSummary['taxTotal']), currencyCode: getCurrencyCode()) }}</strong>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-end text-body text-capitalize">
-                                            <strong>{{ translate('shipping_fee') }}</strong>
-                                            @if($order['is_shipping_free'])
-                                                <br>
-                                                ({{ translate('expense_bearer_').($order['free_delivery_bearer'] == 'seller' ? 'vendor' : $order['free_delivery_bearer']) }})
-                                            @endif
-                                        </td>
-                                        <td class="text-end text-dark">
-                                            <strong>
-                                                {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $orderTotalPriceSummary['shippingTotal'])) }}
-                                            </strong>
-                                        </td>
-                                    </tr>
+
+
+                                    @if($orderTotalPriceSummary['totalResellProfit'] > 0)
+                                        <tr>
+                                            <td class="text-end text-body"><strong>{{ translate('reseller_profit') }}</strong></td>
+                                            <td class="text-end text-success">
+                                                <strong>{{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $orderTotalPriceSummary['totalResellProfit']), currencyCode: getCurrencyCode()) }}</strong>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     <tr>
                                         <td class="text-end text-body"><strong>{{ translate('total') }}</strong></td>
                                         <td class="text-end text-dark">

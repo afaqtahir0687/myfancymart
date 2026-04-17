@@ -402,10 +402,7 @@ class Helpers
 
     public static function tax_calculation($product, $price, $tax, $tax_type)
     {
-        return ($price / 100) * $tax;
-
-//        $discount = self::get_product_discount(product: $product, price: $price);
-//        return (($price-$discount) / 100) * $tax; //after discount decrease
+        return 0;
     }
 
     public static function get_price_range($product)

@@ -826,6 +826,10 @@ if (!$coupon) {
                 'discount_type' => 'discount_on_product',
                 'variant' => $cartSingleItem['variant'],
                 'variation' => $cartSingleItem['variations'],
+                'is_resell' => $cartSingleItem['is_resell'] ?? 0,
+                'commission_rate' => $cartSingleItem['commission_rate'] ?? 0,
+                'resell_commission' => $cartSingleItem['resell_commission'] ?? 0,
+                'resell_profit' => $cartSingleItem['resell_profit'] ?? 0,
                 'delivery_status' => 'pending',
                 'shipping_method_id' => null,
                 'payment_status' => 'unpaid',
@@ -1675,24 +1679,9 @@ if (!$coupon) {
                             }
                         }
 
+                        // Shipping selection check removed as per request
                         if ($sellerShippingCount > 0 && $shippingMethod == 'inhouse_shipping' && $inhouseShippingMsgCount < 1) {
-                            $cartShipping = CartShipping::where('cart_group_id', $cart->cart_group_id)->first();
-                            if (!isset($cartShipping)) {
-                                $response['status'] = 0;
-                                $response['errorType'] = 'empty-shipping';
-                                $response['redirect'] = route('shop-cart');
-                                $message[] = translate('select_shipping_method');
-                            }
                             $inhouseShippingMsgCount++;
-                        } elseif ($sellerShippingCount > 0 && $shippingMethod != 'inhouse_shipping') {
-                            $cartShipping = CartShipping::where('cart_group_id', $cart->cart_group_id)->first();
-                            if (!isset($cartShipping)) {
-                                $response['status'] = 0;
-                                $response['errorType'] = 'empty-shipping';
-                                $response['redirect'] = route('shop-cart');
-                                $shopIdentity = $cart->seller_is == 'admin' ? getWebConfig(name: 'company_name') : $cart->seller->shop->name;
-                                $message[] = translate('select') . ' ' . $shopIdentity . ' ' . translate('shipping_method');
-                            }
                         }
                     }
                 }
@@ -1727,6 +1716,7 @@ if (!$coupon) {
         $referAndEarnDiscount = 0;
         $deliveryFeeDiscount = 0;
         $totalItemQuantity = 0;
+        $totalResellProfit = 0;
 
         foreach ($order->details as $detailKey => $detail) {
             $itemPrice += $detail['price'] * $detail['qty'];
@@ -1736,8 +1726,9 @@ if (!$coupon) {
             $itemDiscount += $detail['discount'];
             $taxTotal += $detail['tax'];
             $totalItemQuantity += $detail['qty'];
+            $totalResellProfit += ($detail['resell_profit'] ?? 0) * $detail['qty'];
         }
-        $total = $itemPrice + $taxTotal - $itemDiscount;
+        $total = $itemPrice - $itemDiscount;
         $shipping = $order['shipping_cost'];
 
         if ($order['extra_discount_type'] == 'percent') {
@@ -1762,13 +1753,14 @@ if (!$coupon) {
             'subTotal' => $subTotal - $itemDiscount - ($order['is_shipping_free'] == 1 ? 0 : $extraDiscount),
             'couponDiscount' => $couponDiscount,
             'referAndEarnDiscount' => $referAndEarnDiscount,
-            'taxTotal' => $taxTotal,
-            'shippingTotal' => $shipping,
+            'taxTotal' => 0,
+            'shippingTotal' => 0,
             'deliveryFeeDiscount' => $deliveryFeeDiscount,
             'totalItemQuantity' => $totalItemQuantity,
-            'totalAmount' => ($total + $shipping - $extraDiscount - $couponDiscount - $referAndEarnDiscount),
+            'totalResellProfit' => $totalResellProfit,
+            'totalAmount' => ($total + $totalResellProfit - $extraDiscount - $couponDiscount - $referAndEarnDiscount),
             'paidAmount' => $order['paid_amount'],
-            'changeAmount' => ($order['paid_amount'] - ($total + $shipping - $extraDiscount - $couponDiscount - $referAndEarnDiscount)),
+            'changeAmount' => ($order['paid_amount'] - ($total + $totalResellProfit + $shipping - $extraDiscount - $couponDiscount - $referAndEarnDiscount)),
         ];
     }
 }
