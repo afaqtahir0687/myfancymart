@@ -29,21 +29,26 @@
 
                 <ul class="nav justify-content-center justify-content-sm-end align-items-center gap-4">
                     <li>
-                        <div class="language-dropdown">
+                        <div class="currency-dropdown">
                             @if($web_config['currency_model']=='multi_currency')
                                 <button
                                     type="button"
-                                    class="border-0 bg-transparent d-flex gap-2 align-items-center dropdown-toggle text-dark p-0"
+                                    class="border-0 bg-transparent d-flex gap-2 align-items-center dropdown-toggle text-dark p-0 fw-semibold"
                                     data-bs-toggle="dropdown"
                                     aria-expanded="false"
                                 >
-                                    {{session('currency_code')}} {{session('currency_symbol')}}
+                                    {{session('currency_symbol')}}{{session('currency_code')}}
                                 </button>
-                                <ul class="dropdown-menu bs-dropdown-min-width--10rem">
+                                <ul class="dropdown-menu dropdown-menu-end currency-dropdown-menu">
                                     @foreach ($web_config['currencies'] as $key => $currency)
-                                        <li class="currency-change" data-currency-code="{{$currency['code']}}">
-                                            <a href="javascript:">{{ $currency->name }}</a>
-                                        </li>
+                                        @if($currency['status'])
+                                            <li class="currency-change" data-currency-code="{{$currency['code']}}">
+                                                <a href="javascript:" class="d-flex gap-2 align-items-center text-decoration-none text-dark py-2 px-3 hover-bg-light">
+                                                    <span class="currency-symbol fw-bold">{{ $currency['symbol'] }}</span>
+                                                    <span class="currency-code">{{ $currency['code'] }}</span>
+                                                </a>
+                                            </li>
+                                        @endif
                                     @endforeach
                                     <span id="currency-route" data-currency-route="{{route('currency.change')}}"></span>
                                 </ul>

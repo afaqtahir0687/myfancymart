@@ -1418,6 +1418,51 @@ body *::-webkit-scrollbar-thumb {
     border-radius: 10px 0 0 10px;
 }
 
+/* Currency Dropdown Styles */
+.currency-dropdown .dropdown-toggle {
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.currency-dropdown .dropdown-toggle:hover {
+    color: var(--bs-primary) !important;
+}
+
+.currency-dropdown-menu {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+    min-width: 120px;
+}
+
+.currency-dropdown-menu li {
+    margin: 0;
+}
+
+.currency-dropdown-menu li a {
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    margin: 0 0.5rem;
+}
+
+.currency-dropdown-menu li a:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    color: var(--bs-primary) !important;
+    transform: translateX(2px);
+}
+
+.currency-dropdown-menu li a .currency-symbol {
+    font-size: 16px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.currency-dropdown-menu li a .currency-code {
+    font-weight: 600;
+    font-size: 14px;
+}
+
 .send-btn {
     border-radius: inherit;
     transition: all ease 0.3s;
