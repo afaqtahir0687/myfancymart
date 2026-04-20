@@ -47,6 +47,7 @@ return [
     'order_shipping' => 'web-views.checkout.shipping',
     'payment_details' => 'web-views.checkout.payment',
     'order_complete' => 'web-views.checkout.complete',
+    'manual_payment' => 'web-views.checkout.manual_payment',
     'products_mobile_nav_partials' => 'layouts.front-end.partials._cart',
     'products_view_page' => 'web-views.products.view',
     'products__ajax_partials' => 'web-views.products._ajax-products',

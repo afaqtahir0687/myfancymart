@@ -563,6 +563,9 @@ const GATEWAYS_PAYMENT_METHODS = [
     ['key' => 'instamojo', 'value' => 'Instamojo'],
     ['key' => 'phonepe', 'value' => 'PhonePe'],
     ['key' => 'cashfree', 'value' => 'Cashfree'],
+    ['key' => 'easypaisa', 'value' => 'EasyPaisa'],
+    ['key' => 'jazzcash', 'value' => 'JazzCash'],
+    ['key' => 'card_payment', 'value' => 'Credit/Debit Card'],
 ];
 
 //currencies

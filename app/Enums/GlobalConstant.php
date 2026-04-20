@@ -560,6 +560,9 @@ enum GlobalConstant
         ['key' => 'payfast', 'value' => 'Pay Fast'],
         ['key' => 'worldpay', 'value' => 'World Pay'],
         ['key' => 'sixcash', 'value' => 'Six Cash'],
+        ['key' => 'easypaisa', 'value' => 'EasyPaisa'],
+        ['key' => 'jazzcash', 'value' => 'JazzCash'],
+        ['key' => 'card_payment', 'value' => 'Credit/Debit Card'],
     ];
 
     //currencies
@@ -1178,7 +1181,10 @@ enum GlobalConstant
         'paytabs',
         'liqpay',
         'mercadopago',
-        'bkash'
+        'bkash',
+        'easypaisa',
+        'jazzcash',
+        'card_payment'
     ];
 
     const DEFAULT_SMS_GATEWAYS = [

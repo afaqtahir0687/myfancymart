@@ -402,6 +402,12 @@ if (!$isGatewayPublished) {
                 ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
         });
 
+        // MANUAL PAYMENT (EASYPAISA, JAZZ_CASH, CARD)
+        Route::group(['prefix' => 'manual', 'as' => 'payment.manual.'], function () {
+            Route::get('pay', [\App\Http\Controllers\Payment_Methods\ManualPaymentController::class, 'index'])->name('pay');
+            Route::post('submit', [\App\Http\Controllers\Payment_Methods\ManualPaymentController::class, 'payment_submit'])->name('submit');
+        });
+
         //STRIPE
         Route::group(['prefix' => 'stripe', 'as' => 'stripe.'], function () {
             Route::get('pay', [StripePaymentController::class, 'index'])->name('pay');

@@ -3,7 +3,75 @@
 @section('title', translate('choose_Payment_Method'))
 
 @push('css_or_js')
-    <link rel="stylesheet" href="{{ theme_asset(path: 'public/assets/front-end/css/payment.css') }}">
+    <link rel="stylesheet" href="{{ dynamicAsset(path: 'public/assets/front-end/css/payment.css') }}">
+    <style>
+        .payment-card {
+            border: 1px solid #e1e9f1;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .payment-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.1);
+            transform: translateY(-2px);
+        }
+        .payment-card.active {
+            border-color: #007bff;
+            background: #f0f7ff;
+            box-shadow: 0 4px 20px rgba(0,123,255,0.15);
+        }
+        .payment-card input[type="radio"] {
+            display: none;
+        }
+        .payment-card .check-mark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ced4da;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            transition: all 0.2s;
+        }
+        .payment-card.active .check-mark {
+            background: #007bff;
+            border-color: #007bff;
+        }
+        .payment-card.active .check-mark::after {
+            content: "\2713";
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .payment-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .payment-info {
+            flex-grow: 1;
+        }
+        .payment-title {
+            font-weight: 600;
+            color: #334257;
+            margin-bottom: 2px;
+            text-transform: capitalize;
+        }
+        .payment-subtitle {
+            font-size: 11px;
+            color: #778ca2;
+        }
+    </style>
     <script src="https://polyfill.io/v3/polyfill.min.js?version=3.52.1&features=fetch"></script>
     <script src="https://js.stripe.com/v3/"></script>
 @endpush
@@ -167,7 +235,7 @@
                                             ?>
 
 
-                                            <div class="col-sm-6">
+                                            <div class="col-md-6 mb-3">
                                                 <form method="post" class="digital_payment"
                                                     id="{{ $payment_gateway->key_name }}_form"
                                                     action="{{ route('customer.web-payment-request') }}">
@@ -192,22 +260,28 @@
 
                                                     <input type="hidden" name="external_redirect_link"
                                                         value="{{ route('web-payment-success') }}">
-                                                    <label
-                                                        class="d-flex align-items-center gap-2 mb-0 form-check py-2 cursor-pointer">
+
+                                                    <div class="payment-card onclick-submit-form" data-form-id="{{ $payment_gateway->key_name }}_form">
                                                         <input type="radio" id="{{ $payment_gateway->key_name }}"
-                                                            name="online_payment" class="form-check-input custom-radio"
+                                                            name="online_payment" class="custom-radio"
                                                             value="{{ $payment_gateway->key_name }}">
-                                                        <img width="30"
-                                                            src="{{ $gatewayImgPath}}"
-                                                            alt="">
-                                                        <span class="text-capitalize form-check-label">
-                                                            @if ($payment_gateway->additional_data && json_decode($payment_gateway->additional_data)->gateway_title != null)
-                                                                {{ json_decode($payment_gateway->additional_data)->gateway_title }}
-                                                            @else
-                                                                {{ str_replace('_', ' ', $payment_gateway->key_name) }}
-                                                            @endif
-                                                        </span>
-                                                    </label>
+                                                        
+                                                        <img src="{{ $gatewayImgPath }}" class="payment-logo" alt="">
+                                                        
+                                                        <div class="payment-info">
+                                                            <div class="payment-title">
+                                                                @if ($payment_gateway->additional_data && json_decode($payment_gateway->additional_data)->gateway_title != null)
+                                                                    {{ json_decode($payment_gateway->additional_data)->gateway_title }}
+                                                                @else
+                                                                    {{ str_replace('_', ' ', $payment_gateway->key_name) }}
+                                                                @endif
+                                                            </div>
+                                                            <div class="payment-subtitle">
+                                                                {{ translate('Secure_payment_via') }} {{ str_replace('_', ' ', $payment_gateway->key_name) }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="check-mark"></div>
+                                                    </div>
                                                 </form>
                                             </div>
                                         @endforeach
@@ -358,4 +432,25 @@
 
 @push('script')
     <script src="{{ theme_asset(path: 'public/assets/front-end/js/payment.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.onclick-submit-form').on('click', function() {
+                var formId = $(this).data('form-id');
+                
+                // Update active state
+                $('.payment-card').removeClass('active');
+                $(this).addClass('active');
+                
+                // Check the hidden radio
+                $(this).find('input[type="radio"]').prop('checked', true);
+                
+                // Optional: Submit the form immediately for a faster flow
+                // or wait for a global "Proceed" button. 
+                // Given the original code had forms per gateway, we submit it.
+                setTimeout(function() {
+                    $('#' + formId).submit();
+                }, 300);
+            });
+        });
+    </script>
 @endpush
