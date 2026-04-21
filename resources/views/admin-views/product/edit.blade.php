@@ -473,7 +473,13 @@
                                             value="include" {{ $product->tax_model == 'include' ? 'selected':'' }}>{{ translate("include_with_product") }}</option>
                                         <option
                                             value="exclude" {{ $product->tax_model == 'exclude' ? 'selected':'' }}>{{ translate("exclude_with_product") }}</option>
+                                        <option
+                                            value="hidden" {{ $product->tax_model == 'hidden' ? 'selected':'' }}>{{ translate("hidden_from_customer") }}</option>
                                     </select>
+                                    <small class="text-muted mt-1 d-block">
+                                        <i class="fi fi-sr-info-circle"></i>
+                                        {{ translate("hidden_from_customer_note") }}
+                                    </small>
                                 </div>
                             </div>
                         </div>

@@ -7,6 +7,9 @@ use App\Models\Review;
 use App\Utils\ProductManager;
 use Illuminate\Support\Facades\Cache;
 
+// Include TaxHelper functions
+require_once __DIR__ . '/TaxHelper.php';
+
 if (!function_exists('getOverallRating')) {
     function getOverallRating(object|array $reviews): array
     {
@@ -73,6 +76,32 @@ if (!function_exists('getProductDiscount')) {
     }
 }
 
+if (!function_exists('getPriceWithHiddenTax')) {
+    function getPriceWithHiddenTax(array|object $product, string|null $type = 'web'): float
+    {
+        $productUnitPrice = $product->unit_price;
+        foreach (json_decode($product->variation) as $key => $variation) {
+            if ($key == 0) {
+                $productUnitPrice = $variation->price;
+            }
+        }
+
+        if ($product->digitalVariation && count($product->digitalVariation) > 0) {
+            $digitalVariations = $product->digitalVariation->toArray();
+            $productUnitPrice = $digitalVariations[0]['price'];
+        }
+
+        // Calculate tax amount but don't show it to user
+        $taxAmount = 0;
+        if ($product->tax_model == 'exclude' && $product->tax > 0) {
+            $taxAmount = ($productUnitPrice / 100) * $product->tax;
+        }
+
+        // Return price with tax included (for admin calculations) but hidden from user
+        return $productUnitPrice + $taxAmount;
+    }
+}
+
 if (!function_exists('getPriceRangeWithDiscount')) {
     function getPriceRangeWithDiscount(array|object $product, string|null $type = 'web'): float|string
     {
@@ -88,29 +117,39 @@ if (!function_exists('getPriceRangeWithDiscount')) {
             $productUnitPrice = $digitalVariations[0]['price'];
         }
 
+        // Use new TaxHelper functions for correct calculations
+        $basePrice = $productUnitPrice;
+        $customerDisplayPrice = \getCustomerDisplayPrice($product);
+        $finalPriceWithTax = \calculateFinalPriceWithTax($product);
+
         if ($type == 'panel') {
+            // Admin panel: show prices with proper tax calculations
             if (isset($product['clearanceSale']) && $product['clearanceSale']) {
-                $discountAmount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $productUnitPrice, from: 'panel');
-                $productDiscountedPrice = setCurrencySymbol(amount: usdToDefaultCurrency(amount: $productUnitPrice - $discountAmount), currencyCode: getCurrencyCode());
-                return '<span class="discounted-unit-price fs-24 font-bold">' . $productDiscountedPrice . '</span>' . '<del class="product-total-unit-price align-middle text-muted fs-18 font-semibold">' . setCurrencySymbol(amount: usdToDefaultCurrency(amount: $productUnitPrice), currencyCode: getCurrencyCode()) . '</del>';
+                $discountAmount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $basePrice, from: 'panel');
+                $displayPrice = $basePrice - $discountAmount;
+                $productDiscountedPrice = setCurrencySymbol(amount: usdToDefaultCurrency(amount: $displayPrice), currencyCode: getCurrencyCode());
+                return '<span class="discounted-unit-price fs-24 font-bold">' . $productDiscountedPrice . '</span>' . '<del class="product-total-unit-price align-middle text-muted fs-18 font-semibold">' . setCurrencySymbol(amount: usdToDefaultCurrency(amount: $basePrice), currencyCode: getCurrencyCode()) . '</del>';
             } elseif ($product->discount > 0) {
-                $amount = $productUnitPrice - getProductDiscount(product: $product, price: $productUnitPrice);
-                $productDiscountedPrice = setCurrencySymbol(amount: usdToDefaultCurrency(amount: $amount), currencyCode: getCurrencyCode());
-                return '<span class="discounted-unit-price fs-24 font-bold">' . $productDiscountedPrice . '</span>' . '<del class="product-total-unit-price align-middle text-muted fs-18 font-semibold">' . setCurrencySymbol(amount: usdToDefaultCurrency(amount: $productUnitPrice), currencyCode: getCurrencyCode()) . '</del>';
+                // Show discounted price (without tax) and original price
+                $productDiscountedPrice = setCurrencySymbol(amount: usdToDefaultCurrency(amount: $customerDisplayPrice), currencyCode: getCurrencyCode());
+                return '<span class="discounted-unit-price fs-24 font-bold">' . $productDiscountedPrice . '</span>' . '<del class="product-total-unit-price align-middle text-muted fs-18 font-semibold">' . setCurrencySymbol(amount: usdToDefaultCurrency(amount: $basePrice), currencyCode: getCurrencyCode()) . '</del>';
             } else {
-                return '<span class="discounted-unit-price fs-24 font-bold">' . setCurrencySymbol(amount: usdToDefaultCurrency(amount: $productUnitPrice), currencyCode: getCurrencyCode()) . '</span>';
+                return '<span class="discounted-unit-price fs-24 font-bold">' . setCurrencySymbol(amount: usdToDefaultCurrency(amount: $basePrice), currencyCode: getCurrencyCode()) . '</span>';
             }
         } else {
+            // Frontend: customer-facing prices (tax hidden for hidden mode)
             if (isset($product['clearanceSale']) && $product['clearanceSale']) {
-                $discountAmount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $productUnitPrice);
-                $productDiscountedPrice = webCurrencyConverter(amount: $productUnitPrice - $discountAmount);
-                return '<span class="discounted-unit-price fs-24 font-bold">' . $productDiscountedPrice . '</span>' . '<del class="product-total-unit-price align-middle text-muted fs-18 font-semibold">' . webCurrencyConverter(amount: $productUnitPrice) . '</del>';
+                $discountAmount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $basePrice);
+                $displayPrice = $basePrice - $discountAmount;
+                $productDiscountedPrice = webCurrencyConverter(amount: $displayPrice);
+                return '<span class="discounted-unit-price fs-24 font-bold">' . $productDiscountedPrice . '</span>' . '<del class="product-total-unit-price align-middle text-muted fs-18 font-semibold">' . webCurrencyConverter(amount: $basePrice) . '</del>';
 
             } elseif ($product->discount > 0) {
-                $productDiscountedPrice = webCurrencyConverter(amount: $productUnitPrice - getProductDiscount(product: $product, price: $productUnitPrice));
-                return '<span class="discounted-unit-price fs-24 font-bold">' . $productDiscountedPrice . '</span>' . '<del class="product-total-unit-price align-middle text-muted fs-18 font-semibold">' . webCurrencyConverter(amount: $productUnitPrice) . '</del>';
+                // Show customer price without tax
+                $productDiscountedPrice = webCurrencyConverter(amount: $customerDisplayPrice);
+                return '<span class="discounted-unit-price fs-24 font-bold">' . $productDiscountedPrice . '</span>' . '<del class="product-total-unit-price align-middle text-muted fs-18 font-semibold">' . webCurrencyConverter(amount: $basePrice) . '</del>';
             } else {
-                return '<span class="discounted-unit-price fs-24 font-bold">' . webCurrencyConverter(amount: $productUnitPrice) . '</span>';
+                return '<span class="discounted-unit-price fs-24 font-bold">' . webCurrencyConverter(amount: $basePrice) . '</span>';
             }
         }
     }

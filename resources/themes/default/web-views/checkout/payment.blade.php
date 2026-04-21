@@ -224,7 +224,7 @@
                                         </div>
                                     @endif
 
-                                    <div class="row gx-4 mb-4">
+                                    <!-- <div class="row gx-4 mb-4">
                                         @foreach ($payment_gateways_list as $payment_gateway)
                                             @php($additionalData = $payment_gateway['additional_data'] != null ? json_decode($payment_gateway['additional_data']) : [])
                                             <?php
@@ -318,7 +318,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    @endif
+                                    @endif -->
                                 @endif
                             @endif
 
