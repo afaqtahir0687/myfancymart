@@ -251,15 +251,21 @@
                                                         @if(isDiscountActive($product))
                                                             <div class="discount-countdown">
                                                                 <div class="d-flex align-items-center gap-2">
-                                                                    <div class="countdown-badge bg-warning text-dark px-2 py-1 rounded">
-                                                                        <small class="fw-bold">
-                                                                            @if(getDiscountDaysRemaining($product) > 0)
+                                                                    @if(getDiscountDaysRemaining($product) > 0)
+                                                                        <div class="countdown-badge bg-warning text-dark px-2 py-1 rounded">
+                                                                            <small class="fw-bold">
                                                                                 {{ getDiscountDaysRemaining($product) }} {{ translate('days_left') }}
-                                                                            @else
-                                                                                {{ translate('discount_ends_today') }}
-                                                                            @endif
-                                                                        </small>
-                                                                    </div>
+                                                                            </small>
+                                                                        </div>
+                                                                    @else
+                                                                        <div class="countdown-timer bg-danger text-white px-3 py-2 rounded" 
+                                                                             data-end-date="{{ $product->discount_end_date ? date('Y-m-d H:i:s', strtotime($product->discount_end_date . ' 23:59:59')) : '' }}">
+                                                                            <small class="fw-bold">
+                                                                                <i class="fi fi-sr-clock"></i>
+                                                                                <span class="timer-display">{{ translate('discount_ends_today') }}</span>
+                                                                            </small>
+                                                                        </div>
+                                                                    @endif
                                                                     <small class="text-success fw-semibold">
                                                                         <i class="fi fi-sr-check-circle"></i>
                                                                         {{ translate('discount_active') }}
@@ -1451,5 +1457,55 @@
                 });
             });
         });
+
+        // Countdown Timer for Discount
+        function initCountdownTimer() {
+            $('.countdown-timer').each(function() {
+                const $timer = $(this);
+                const endDate = $timer.data('end-date');
+                
+                if (!endDate) return;
+                
+                const targetDate = new Date(endDate).getTime();
+                
+                function updateTimer() {
+                    const now = new Date().getTime();
+                    const distance = targetDate - now;
+                    
+                    if (distance < 0) {
+                        $timer.find('.timer-display').html('<i class="fi fi-sr-cross-circle"></i> {{ translate("discount_expired") }}');
+                        $timer.removeClass('bg-danger').addClass('bg-secondary');
+                        clearInterval(timerInterval);
+                        return;
+                    }
+                    
+                    const hours = Math.floor(distance / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    
+                    let timeString = '';
+                    if (hours > 0) {
+                        timeString += hours + 'h ';
+                    }
+                    if (minutes > 0 || hours > 0) {
+                        timeString += minutes + 'm ';
+                    }
+                    timeString += seconds + 's';
+                    
+                    $timer.find('.timer-display').html('<i class="fi fi-sr-clock"></i> ' + timeString + ' {{ translate("left") }}');
+                    
+                    // Add pulse animation for urgency
+                    if (hours < 2) {
+                        $timer.addClass('animate-pulse');
+                    }
+                }
+                
+                const timerInterval = setInterval(updateTimer, 1000);
+                updateTimer(); // Initial call
+            });
+        }
+        
+        // Initialize countdown timer when page loads
+        initCountdownTimer();
     </script>
 @endpush

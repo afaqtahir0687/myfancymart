@@ -129,7 +129,7 @@
                     <input type="date" 
                            name="discount_start_date" id="discount_start_date" 
                            class="form-control"
-                           value="{{ $product->discount_start_date }}"
+                           value="{{ $product->discount_start_date ? date('Y-m-d', strtotime($product->discount_start_date)) : '' }}"
                            min="{{ date('Y-m-d') }}">
                 </div>
             </div>
@@ -147,7 +147,7 @@
                     <input type="date" 
                            name="discount_end_date" id="discount_end_date" 
                            class="form-control"
-                           value="{{ $product->discount_end_date }}"
+                           value="{{ $product->discount_end_date ? date('Y-m-d', strtotime($product->discount_end_date)) : '' }}"
                            min="{{ date('Y-m-d') }}">
                 </div>
             </div>
@@ -163,7 +163,7 @@
                         </span>
                     </label>
                     <select name="discount_is_active" id="discount_is_active" class="form-control">
-                        <option value="1" {{ $product->discount_is_active == 1 ? 'selected' : '' }}>
+                        <option value="1" {{ ($product->discount_is_active == 1 || $product->discount_is_active === null) ? 'selected' : '' }}>
                             {{ translate('active') }}
                         </option>
                         <option value="0" {{ $product->discount_is_active == 0 ? 'selected' : '' }}>
