@@ -1416,7 +1416,7 @@
                     resell_price: resellPrice,
                     commission_rate: commissionRate,
                     customer_price: resellPrice + (resellPrice * commissionRate / 100),
-                    profit: resellPrice - originalPrice,
+                    profit: parseFloat($('#reseller-profit').val()) || 0,
                     quantity: qty
                 });
                 

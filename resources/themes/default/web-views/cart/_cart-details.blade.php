@@ -197,6 +197,9 @@
                                                     class="text-break __line-2 __w-18rem {{ $checkProductStatus == 0?'custom-cart-opacity-50':'' }}">
                                                     <a href="{{ $checkProductStatus == 1 ? route('product', $cartItem['slug']) : 'javascript:'}}">
                                                         {{$cartItem['name']}}
+                                                        @if(isset($cartItem['is_resell']) && $cartItem['is_resell'] == 1)
+                                                            <span class="badge bg-success ms-1">{{ translate('resell') }}</span>
+                                                        @endif
                                                     </a>
                                                     @if(!empty($cartItem['variant']))
                                                         <div>
@@ -204,6 +207,17 @@
                                                         </div>
                                                     @endif
                                                 </div>
+
+                                                @if(isset($cartItem['is_resell']) && $cartItem['is_resell'] == 1 && ($cartItem['resell_profit'] ?? 0) > 0)
+                                                    <div class="d-flex flex-wrap gap-2 {{ $checkProductStatus == 0?'custom-cart-opacity-50':'' }}">
+                                                        <span class="fw-semibold text-success">
+                                                            {{ translate('resell_profit')}}
+                                                        </span>:
+                                                        <span class="text-success">
+                                                            {{ webCurrencyConverter(amount: ($cartItem['resell_profit'] ?? 0) * $cartItem['quantity']) }}
+                                                        </span>
+                                                    </div>
+                                                @endif
 
                                                 @if ($product->product_type == 'physical' && $shipping_type != 'order_wise')
                                                     <div
@@ -456,12 +470,26 @@
                                 </div>
                                 <div class="d-flex flex-column gap-1 {{ $checkProductStatus == 0?'custom-cart-opacity-50':'' }}">
                                     <div class="text-break __line-2">
-                                        <a href="{{ $checkProductStatus == 1 ? route('product',$cartItem['slug']) : 'javascript:'}}">{{$cartItem['name']}}</a>
+                                        <a href="{{ $checkProductStatus == 1 ? route('product',$cartItem['slug']) : 'javascript:'}}">
+                                            {{$cartItem['name']}}
+                                            @if(isset($cartItem['is_resell']) && $cartItem['is_resell'] == 1)
+                                                <span class="badge bg-success ms-1">{{ translate('resell') }}</span>
+                                            @endif
+                                        </a>
                                     </div>
 
                                     @if(!empty($cartItem['variant']))
                                         <div>
                                             <span class="__text-12px">{{translate('variant')}} : {{$cartItem['variant']}}</span>
+                                        </div>
+                                    @endif
+
+                                    @if(isset($cartItem['is_resell']) && $cartItem['is_resell'] == 1 && ($cartItem['resell_profit'] ?? 0) > 0)
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span class="text-muted">{{ translate('resell_profit')}} :</span>
+                                            <span class="text-success fw-semibold">
+                                                {{ webCurrencyConverter(amount: ($cartItem['resell_profit'] ?? 0) * $cartItem['quantity']) }}
+                                            </span>
                                         </div>
                                     @endif
                                     <div class="d-flex flex-wrap column-gap-2">

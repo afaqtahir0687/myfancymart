@@ -538,7 +538,7 @@ class ProductDetailsController extends Controller
             'is_resell' => true,
             'commission_rate' => 0,
             'resell_commission' => 0,
-            'resell_profit' => $request->resell_price - $product->unit_price,
+            'resell_profit' => $request->profit ?? 0,
         ];
 
         $cartGroupData = [
@@ -550,7 +550,7 @@ class ProductDetailsController extends Controller
             'is_resell' => 1,
             'commission_rate' => 0,
             'resell_commission' => 0,
-            'resell_profit' => $request->resell_price - $product->unit_price,
+            'resell_profit' => $request->profit ?? 0,
             'product_type' => $product->product_type,
             'seller_id' => $product->user_id,
             'seller_is' => $product->added_by,
