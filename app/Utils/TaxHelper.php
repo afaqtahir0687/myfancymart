@@ -1,5 +1,8 @@
 <?php
 
+// Include DiscountHelper functions
+require_once __DIR__ . '/DiscountHelper.php';
+
 if (!function_exists('calculateCorrectTax')) {
     function calculateCorrectTax(array|object $product, float $basePrice = null): float
     {
@@ -56,7 +59,8 @@ if (!function_exists('getProductDiscountAmount')) {
     {
         $discountAmount = 0;
         
-        if ($product->discount > 0) {
+        // Check if discount is active based on dates
+        if (isDiscountActive($product)) {
             if ($product->discount_type == 'percent') {
                 $discountAmount = ($basePrice * $product->discount) / 100;
             } else {

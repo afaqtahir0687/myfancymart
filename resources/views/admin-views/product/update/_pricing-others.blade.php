@@ -106,6 +106,93 @@
                            name="discount" id="discount" class="form-control" required>
                 </div>
             </div>
+        </div>
+        
+        <!-- Discount Date Fields Row -->
+        <div class="row gy-4 mt-2">
+            <div class="col-12">
+                <h6 class="text-primary mb-3">
+                    <i class="fi fi-sr-calendar me-2"></i>{{ translate('discount_schedule_settings') }}
+                </h6>
+            </div>
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="form-group">
+                    <label class="form-label" for="discount_start_date">
+                        {{ translate('discount_start_date') }}
+                        <span class="tooltip-icon cursor-pointer" data-bs-toggle="tooltip"
+                              aria-label="{{ translate('set_discount_start_date_leave_empty_for_immediate') }}."
+                              data-bs-title="{{ translate('set_discount_start_date_leave_empty_for_immediate') }}."
+                        >
+                            <i class="fi fi-sr-info"></i>
+                        </span>
+                    </label>
+                    <input type="date" 
+                           name="discount_start_date" id="discount_start_date" 
+                           class="form-control"
+                           value="{{ $product->discount_start_date }}"
+                           min="{{ date('Y-m-d') }}">
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="form-group">
+                    <label class="form-label" for="discount_end_date">
+                        {{ translate('discount_end_date') }}
+                        <span class="tooltip-icon cursor-pointer" data-bs-toggle="tooltip"
+                              aria-label="{{ translate('set_discount_end_date_leave_empty_for_no_expiry') }}."
+                              data-bs-title="{{ translate('set_discount_end_date_leave_empty_for_no_expiry') }}."
+                        >
+                            <i class="fi fi-sr-info"></i>
+                        </span>
+                    </label>
+                    <input type="date" 
+                           name="discount_end_date" id="discount_end_date" 
+                           class="form-control"
+                           value="{{ $product->discount_end_date }}"
+                           min="{{ date('Y-m-d') }}">
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="form-group">
+                    <label class="form-label" for="discount_is_active">
+                        {{ translate('discount_active') }}
+                        <span class="tooltip-icon cursor-pointer" data-bs-toggle="tooltip"
+                              aria-label="{{ translate('enable_or_disable_discount_temporarily') }}."
+                              data-bs-title="{{ translate('enable_or_disable_discount_temporarily') }}."
+                        >
+                            <i class="fi fi-sr-info"></i>
+                        </span>
+                    </label>
+                    <select name="discount_is_active" id="discount_is_active" class="form-control">
+                        <option value="1" {{ $product->discount_is_active == 1 ? 'selected' : '' }}>
+                            {{ translate('active') }}
+                        </option>
+                        <option value="0" {{ $product->discount_is_active == 0 ? 'selected' : '' }}>
+                            {{ translate('inactive') }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-12 col-lg-12 col-xl-12">
+                <div class="form-group">
+                    <label class="form-label" for="discount_note">
+                        {{ translate('discount_note') }}
+                        <span class="tooltip-icon cursor-pointer" data-bs-toggle="tooltip"
+                              aria-label="{{ translate('add_internal_note_about_this_discount') }}."
+                              data-bs-title="{{ translate('add_internal_note_about_this_discount') }}."
+                        >
+                            <i class="fi fi-sr-info"></i>
+                        </span>
+                    </label>
+                    <textarea name="discount_note" id="discount_note" 
+                              class="form-control" 
+                              rows="2"
+                              placeholder="{{ translate('internal_discount_note_placeholder') }}">{{ $product->discount_note }}</textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tax Fields Row -->
+        <div class="row gy-4 mt-2">
             <div class="col-md-6 col-lg-4 col-xl-3">
                 <div class="form-group">
                     <label class="form-label" for="tax">

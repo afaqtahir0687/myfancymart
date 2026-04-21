@@ -1,0 +1,157 @@
+/* Discount Countdown Styles */
+.discount-countdown {
+    margin-top: 10px;
+}
+
+.discount-countdown .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    animation: pulse 2s infinite;
+}
+
+.discount-countdown .alert-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.discount-countdown .alert-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+}
+
+.discount-countdown .alert-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.discount-countdown .fi {
+    font-size: 20px;
+    margin-right: 8px;
+}
+
+.discount-countdown strong {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.countdown-timer {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.countdown-timer small {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.countdown-timer .fi {
+    font-size: 12px;
+    margin-right: 4px;
+}
+
+/* Discount Badge Styles */
+.discount-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    min-width: 120px;
+}
+
+.discount-badge .badge-danger {
+    background: #dc3545;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.discount-badge .badge-warning {
+    background: #ffc107;
+    color: #212529;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.discount-badge .badge-info {
+    background: #17a2b8;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+}
+
+.discount-amount {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.discount-timer {
+    display: block;
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .discount-countdown .alert {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    .discount-countdown .fi {
+        font-size: 18px;
+        margin-right: 6px;
+    }
+    
+    .discount-countdown strong {
+        font-size: 14px;
+    }
+    
+    .discount-badge {
+        top: 5px;
+        right: 5px;
+        min-width: 100px;
+    }
+    
+    .discount-badge .badge-danger,
+    .discount-badge .badge-warning,
+    .discount-badge .badge-info {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}

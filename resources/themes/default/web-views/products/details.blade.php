@@ -5,6 +5,7 @@
 @push('css_or_js')
     @include(VIEW_FILE_NAMES['product_seo_meta_content_partials'], ['metaContentData' => $product?->seoInfo, 'productDetails' => $product])
     <link rel="stylesheet" href="{{ theme_asset(path: 'public/assets/front-end/css/product-details.css') }}"/>
+    <link rel="stylesheet" href="{{ theme_asset(path: 'public/assets/front-end/css/discount-countdown.css') }}"/>
 @endpush
 
 @section('content')
@@ -222,6 +223,68 @@
                                                 </del>
                                             @endif
                                         </h3>
+                                        
+                                        @if($product->discount > 0)
+                                            <div class="discount-info mt-3">
+                                                <div class="alert alert-success d-flex align-items-start gap-3">
+                                                    <i class="fi fi-sr-tag fs-20 mt-1"></i>
+                                                    <div class="flex-grow-1">
+                                                        <div class="discount-amount-display mb-2">
+                                                            <strong class="text-success">{{ formatDiscountDisplay($product) }}</strong>
+                                                        </div>
+                                                        
+                                                        @if($product->discount_start_date || $product->discount_end_date)
+                                                            <div class="discount-date-range mb-2">
+                                                                <small class="d-block">
+                                                                    <i class="fi fi-sr-calendar"></i>
+                                                                    @if($product->discount_start_date && $product->discount_end_date)
+                                                                        {{ translate('discount_valid_from') }} {{ date('M j, Y', strtotime($product->discount_start_date)) }} {{ translate('to') }} {{ date('M j, Y', strtotime($product->discount_end_date)) }}
+                                                                    @elseif($product->discount_start_date)
+                                                                        {{ translate('discount_starts_from') }} {{ date('M j, Y', strtotime($product->discount_start_date)) }}
+                                                                    @elseif($product->discount_end_date)
+                                                                        {{ translate('discount_ends_on') }} {{ date('M j, Y', strtotime($product->discount_end_date)) }}
+                                                                    @endif
+                                                                </small>
+                                                            </div>
+                                                        @endif
+                                                        
+                                                        @if(isDiscountActive($product))
+                                                            <div class="discount-countdown">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <div class="countdown-badge bg-warning text-dark px-2 py-1 rounded">
+                                                                        <small class="fw-bold">
+                                                                            @if(getDiscountDaysRemaining($product) > 0)
+                                                                                {{ getDiscountDaysRemaining($product) }} {{ translate('days_left') }}
+                                                                            @else
+                                                                                {{ translate('discount_ends_today') }}
+                                                                            @endif
+                                                                        </small>
+                                                                    </div>
+                                                                    <small class="text-success fw-semibold">
+                                                                        <i class="fi fi-sr-check-circle"></i>
+                                                                        {{ translate('discount_active') }}
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        @elseif($product->discount_start_date && date('Y-m-d') < $product->discount_start_date)
+                                                            <div class="discount-upcoming">
+                                                                <small class="text-info">
+                                                                    <i class="fi fi-sr-clock"></i>
+                                                                    {{ translate('discount_starts_in') }} {{ getDiscountDaysRemaining($product) }} {{ translate('days') }}
+                                                                </small>
+                                                            </div>
+                                                        @elseif($product->discount_end_date && date('Y-m-d') > $product->discount_end_date)
+                                                            <div class="discount-expired">
+                                                                <small class="text-danger">
+                                                                    <i class="fi fi-sr-cross-circle"></i>
+                                                                    {{ translate('discount_expired') }}
+                                                                </small>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
 
                                     @csrf
