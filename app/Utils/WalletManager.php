@@ -2,10 +2,10 @@
 
 namespace App\Utils;
 
-use App\Models\Wallet;
-use App\Models\WalletTransaction;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\Wallet;
+use App\Models\WalletTransaction;
 
 class WalletManager
 {
@@ -99,16 +99,23 @@ class WalletManager
      */
     public static function processWithdrawal($userId, $amount, $withdrawalMethod = null)
     {
-        $wallet = Wallet::where('user_id', $userId)->first();
-        
-        if (!$wallet || $wallet->balance < $amount) {
-            return [
-                'success' => false,
-                'message' => 'Insufficient balance'
-            ];
-        }
-
         try {
+            $wallet = Wallet::where('user_id', $userId)->first();
+            
+            if (!$wallet) {
+                return [
+                    'success' => false,
+                    'message' => 'No wallet found for this user'
+                ];
+            }
+            
+            if ($wallet->balance < $amount) {
+                return [
+                    'success' => false,
+                    'message' => 'Insufficient balance. Available balance: ' . $wallet->balance
+                ];
+            }
+
             // Create debit transaction
             $transaction = $wallet->debit(
                 $amount,

@@ -108,7 +108,7 @@
                                             </td>
                                             <td>
                                                 <span class="fw-bold {{ $transaction->transaction_type == 'credit' ? 'text-success' : 'text-danger' }}">
-                                                    {{ $transaction->transaction_type == 'credit' ? '+' : '-' }}{{ webCurrencyConverter(amount: $transaction->amount) }}
+                                                    {{ $transaction->transaction_type == 'credit' ? '+' : '-' }}{{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $transaction->amount), currencyCode: getCurrencyCode()) }}
                                                 </span>
                                             </td>
                                             <td>
@@ -118,7 +118,7 @@
                                             </td>
                                             <td>
                                                 @if($transaction->order_id)
-                                                    <a href="{{ route('customer.order.details', $transaction->order_id) }}" 
+                                                    <a href="{{ route('account-order-details', ['id' => $transaction->order_id]) }}" 
                                                        class="btn btn-sm btn-outline-primary" target="_blank">
                                                         #{{ $transaction->order_id }}
                                                     </a>

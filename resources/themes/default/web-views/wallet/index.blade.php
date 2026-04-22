@@ -1,5 +1,9 @@
 @extends('layouts.front-end.app')
 
+@push('css_or_js')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endpush
+
 @section('content')
 <div class="container py-4">
     <div class="row">
@@ -14,7 +18,7 @@
             <div class="card border-primary">
                 <div class="card-body text-center">
                     <h5 class="card-title text-primary">{{ translate('current_balance') }}</h5>
-                    <h3 class="text-primary">{{ webCurrencyConverter(amount: $walletSummary['balance']) }}</h3>
+                    <h3 class="text-primary">{{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $walletSummary['balance']), currencyCode: getCurrencyCode()) }}</h3>
                 </div>
             </div>
         </div>
@@ -22,7 +26,7 @@
             <div class="card border-success">
                 <div class="card-body text-center">
                     <h5 class="card-title text-success">{{ translate('total_earned') }}</h5>
-                    <h3 class="text-success">{{ webCurrencyConverter(amount: $walletSummary['total_earned']) }}</h3>
+                    <h3 class="text-success">{{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $walletSummary['total_earned']), currencyCode: getCurrencyCode()) }}</h3>
                 </div>
             </div>
         </div>
@@ -30,7 +34,7 @@
             <div class="card border-info">
                 <div class="card-body text-center">
                     <h5 class="card-title text-info">{{ translate('total_withdrawn') }}</h5>
-                    <h3 class="text-info">{{ webCurrencyConverter(amount: $walletSummary['total_withdrawn']) }}</h3>
+                    <h3 class="text-info">{{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $walletSummary['total_withdrawn']), currencyCode: getCurrencyCode()) }}</h3>
                 </div>
             </div>
         </div>
@@ -48,11 +52,11 @@
                         <div class="mb-3">
                             <label for="amount" class="form-label">{{ translate('withdrawal_amount') }}</label>
                             <div class="input-group">
-                                <span class="input-group-text">{{ getCurrencySymbol(type: 'web') }}</span>
+                                <span class="input-group-text">{{ getCurrencySymbol() }}</span>
                                 <input type="number" class="form-control" id="amount" name="amount" 
                                        min="1" max="{{ $walletSummary['balance'] }}" step="0.01" required>
                             </div>
-                            <small class="text-muted">{{ translate('maximum_withdrawable_amount') }}: {{ webCurrencyConverter(amount: $walletSummary['balance']) }}</small>
+                            <small class="text-muted">{{ translate('maximum_withdrawable_amount') }}: {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $walletSummary['balance']), currencyCode: getCurrencyCode()) }}</small>
                         </div>
                         <div class="mb-3">
                             <label for="withdrawal_method" class="form-label">{{ translate('withdrawal_method') }}</label>
@@ -123,7 +127,7 @@
                                                 </span>
                                             </td>
                                             <td class="{{ $transaction->transaction_type == 'credit' ? 'text-success' : 'text-danger' }}">
-                                                {{ $transaction->transaction_type == 'credit' ? '+' : '-' }}{{ webCurrencyConverter(amount: $transaction->amount) }}
+                                                {{ $transaction->transaction_type == 'credit' ? '+' : '-' }}{{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $transaction->amount), currencyCode: getCurrencyCode()) }}
                                             </td>
                                             <td>
                                                 <span class="badge bg-{{ $transaction->status == 'completed' ? 'success' : ($transaction->status == 'pending' ? 'warning' : 'danger') }}">
@@ -169,7 +173,19 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                alert('{{ translate('something_went_wrong') }}');
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    alert(xhr.responseJSON.message);
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    // Show validation errors
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessages = [];
+                    for (let field in errors) {
+                        errorMessages.push(errors[field][0]);
+                    }
+                    alert(errorMessages.join('\n'));
+                } else {
+                    alert('{{ translate('something_went_wrong') }}: ' + xhr.status);
+                }
             }
         });
     });
