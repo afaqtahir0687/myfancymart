@@ -104,6 +104,9 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
         Route::get('checkout-details', 'checkout_details')->name('checkout-details');
         Route::get('checkout-shipping', 'checkout_shipping')->name('checkout-shipping');
         Route::get('checkout-payment', 'checkout_payment')->name('checkout-payment');
+        Route::post('select-shipping-address', 'select_shipping_address')->name('select-shipping-address');
+        Route::post('select-billing-address', 'select_billing_address')->name('select-billing-address');
+        Route::get('debug-shipping', 'debug_shipping')->name('debug-shipping');
         Route::get('checkout-review', 'checkout_review')->name('checkout-review');
         Route::get('checkout-complete', 'getCashOnDeliveryCheckoutComplete')->name('checkout-complete');
         Route::post('offline-payment-checkout-complete', 'getOfflinePaymentCheckoutComplete')->name('offline-payment-checkout-complete');

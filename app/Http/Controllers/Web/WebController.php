@@ -433,6 +433,86 @@ class WebController extends Controller
         ]);
     }
 
+    public function select_shipping_address(Request $request)
+    {
+        $addressId = $request->input('address_id');
+        session(['address_id' => $addressId]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Shipping address selected successfully'
+        ]);
+    }
+
+    public function select_billing_address(Request $request)
+    {
+        $addressId = $request->input('address_id');
+        session(['billing_address_id' => $addressId]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Billing address selected successfully'
+        ]);
+    }
+
+    public function debug_shipping(Request $request)
+    {
+        // Update shipping type to product_wise if requested
+        if ($request->has('fix_shipping_type')) {
+            // Direct database update
+            \DB::table('shipping_types')->where('seller_id', 0)->update(['shipping_type' => 'product_wise']);
+        }
+        
+        // Add test product to cart if requested
+        if ($request->has('add_test_product')) {
+            $product = \App\Models\Product::where('product_type', 'physical')->first();
+            if ($product) {
+                // Add to cart using direct cart creation
+                $cart = new \App\Models\Cart();
+                $cart->product_id = $product->id;
+                $cart->customer_id = auth('customer')->id() ?? session('guest_id');
+                $cart->quantity = 1;
+                $cart->price = $product->unit_price;
+                $cart->product_type = $product->product_type;
+                $cart->is_checked = 1;
+                $cart->cart_group_id = 'default';
+                $cart->created_at = now();
+                $cart->updated_at = now();
+                $cart->save();
+            }
+        }
+        
+        $cart = CartManager::getCartListQuery(type: 'checked');
+        $shippingCost = CartManager::get_shipping_cost(type: 'checked');
+        
+        $debugInfo = [
+            'cart_count' => $cart->count(),
+            'shipping_cost' => $shippingCost,
+            'cart_items' => [],
+            'shipping_method' => getWebConfig(name: 'shipping_method'),
+            'session_address_id' => session('address_id'),
+            'session_billing_address_id' => session('billing_address_id'),
+            'physical_products_available' => \App\Models\Product::where('product_type', 'physical')->count(),
+            'products_with_shipping_cost' => \App\Models\Product::where('shipping_cost', '>', 0)->count()
+        ];
+        
+        foreach ($cart as $item) {
+            $product = \App\Models\Product::find($item['product_id']);
+            $debugInfo['cart_items'][] = [
+                'product_id' => $item['product_id'],
+                'product_name' => $product ? $product->name : 'Not Found',
+                'product_type' => $item['product_type'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+                'is_physical' => $item['product_type'] == 'physical',
+                'shipping_cost' => $product ? $product->shipping_cost : 0,
+                'multiply_qty' => $product ? $product->multiply_qty : 0
+            ];
+        }
+        
+        return response()->json($debugInfo);
+    }
+
     public function checkout_payment(Request $request): View|RedirectResponse
     {
         if (!session('address_id') && !session('billing_address_id')) {

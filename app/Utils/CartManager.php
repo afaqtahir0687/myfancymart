@@ -164,7 +164,57 @@ class CartManager
 
     public static function get_shipping_cost($groupId = null, $type = null)
     {
-        return 0; // Forced to 0 as per request
+        $totalShippingCost = 0;
+        
+        if ($type == 'checked') {
+            $cart = CartManager::getCartListQuery(groupId: $groupId, type: 'checked');
+        } else {
+            $cart = CartManager::getCartListQuery(groupId: $groupId);
+        }
+        
+        // Debug: Log cart information
+        \Log::info('Shipping Cost Calculation - Cart Info', [
+            'cart_count' => $cart ? $cart->count() : 0,
+            'type' => $type,
+            'group_id' => $groupId
+        ]);
+        
+        if (!empty($cart)) {
+            foreach ($cart as $item) {
+                \Log::info('Processing Cart Item', [
+                    'product_id' => $item['product_id'],
+                    'product_type' => $item['product_type'],
+                    'quantity' => $item['quantity'],
+                    'is_physical' => $item['product_type'] == 'physical'
+                ]);
+                
+                if ($item['product_type'] == 'physical') {
+                    $product = \App\Models\Product::find($item['product_id']);
+                    if ($product) {
+                        \Log::info('Product Found', [
+                            'product_id' => $product->id,
+                            'product_name' => $product->name,
+                            'shipping_cost' => $product->shipping_cost,
+                            'multiply_qty' => $product->multiply_qty
+                        ]);
+                        
+                        $itemShippingCost = self::get_shipping_cost_for_product_category_wise($product, $item['quantity']);
+                        $totalShippingCost += $itemShippingCost;
+                        
+                        \Log::info('Item Shipping Cost Calculated', [
+                            'item_shipping_cost' => $itemShippingCost,
+                            'running_total' => $totalShippingCost
+                        ]);
+                    } else {
+                        \Log::info('Product Not Found', ['product_id' => $item['product_id']]);
+                    }
+                }
+            }
+        }
+        
+        \Log::info('Final Shipping Cost', ['total_shipping_cost' => $totalShippingCost]);
+        
+        return $totalShippingCost;
     }
 
     public static function updateOrderSummaryShippingCost($groupId = null, $type = null): void
@@ -801,19 +851,38 @@ class CartManager
     {
         $shippingMethod = getWebConfig(name: 'shipping_method');
         $cost = 0;
+        
+        \Log::info('get_shipping_cost_for_product_category_wise called', [
+            'product_id' => $product->id,
+            'quantity' => $qty,
+            'shipping_method' => $shippingMethod,
+            'product_added_by' => $product->added_by,
+            'product_shipping_cost' => $product->shipping_cost,
+            'product_multiply_qty' => $product->multiply_qty
+        ]);
 
         if ($shippingMethod == 'inhouse_shipping') {
             $adminShipping = ShippingType::where('seller_id', 0)->first();
-            $shippingType = isset($adminShipping) ? $adminShipping->shipping_type : 'order_wise';
+            $shippingType = isset($adminShipping) ? $adminShipping->shipping_type : 'product_wise';
+            \Log::info('Inhouse shipping', ['admin_shipping' => $adminShipping ? $adminShipping->toArray() : null]);
         } else {
             if ($product->added_by == 'admin') {
                 $adminShipping = ShippingType::where('seller_id', 0)->first();
-                $shippingType = isset($adminShipping) ? $adminShipping->shipping_type : 'order_wise';
+                $shippingType = isset($adminShipping) ? $adminShipping->shipping_type : 'product_wise';
+                \Log::info('Admin product shipping', ['admin_shipping' => $adminShipping ? $adminShipping->toArray() : null]);
             } else {
                 $sellerShipping = ShippingType::where('seller_id', $product->user_id)->first();
-                $shippingType = isset($sellerShipping) ? $sellerShipping->shipping_type : 'order_wise';
+                $shippingType = isset($sellerShipping) ? $sellerShipping->shipping_type : 'product_wise';
+                \Log::info('Seller product shipping', ['sellerShipping' => $sellerShipping ? $sellerShipping->toArray() : null]);
             }
         }
+        
+        \Log::info('Shipping type determined', [
+            'shipping_type' => $shippingType,
+            'product_shipping_cost' => $product->shipping_cost,
+            'product_multiply_qty' => $product->multiply_qty,
+            'will_use_product_wise' => $shippingType == 'product_wise'
+        ]);
 
         if ($shippingType == 'category_wise') {
             $categoryID = 0;
@@ -833,6 +902,26 @@ class CartManager
                 }
             }
 
+            \Log::info('Category shipping cost lookup', [
+                'category_id' => $categoryID,
+                'seller_id' => $product->user_id,
+                'shipping_method' => $shippingMethod
+            ]);
+
+            if ($shippingMethod == 'inhouse_shipping') {
+                $categoryShippingCost = CategoryShippingCost::where('seller_id', 0)->where('category_id', $categoryID)->first();
+            } else {
+                if ($product->added_by == 'admin') {
+                    $categoryShippingCost = CategoryShippingCost::where('seller_id', 0)->where('category_id', $categoryID)->first();
+                } else {
+                    $categoryShippingCost = CategoryShippingCost::where('seller_id', $product->user_id)->where('category_id', $categoryID)->first();
+                }
+            }
+
+            \Log::info('Category shipping cost found', [
+                'category_shipping_cost' => $categoryShippingCost ? $categoryShippingCost->toArray() : null
+            ]);
+
             if (isset($categoryShippingCost->multiply_qty) && $categoryShippingCost->multiply_qty == 1) {
                 $cost = $qty * $categoryShippingCost->cost;
             } else {
@@ -840,14 +929,25 @@ class CartManager
             }
 
         } else if ($shippingType == 'product_wise') {
+            \Log::info('Product wise shipping', [
+                'product_shipping_cost' => $product->shipping_cost,
+                'multiply_qty' => $product->multiply_qty
+            ]);
+            
             if ($product->multiply_qty == 1) {
                 $cost = $qty * $product->shipping_cost;
             } else {
                 $cost = $product->shipping_cost;
             }
         } else {
+            \Log::info('Order wise shipping - cost set to 0');
             $cost = 0;
         }
+
+        \Log::info('Final shipping cost for product', [
+            'product_id' => $product->id,
+            'final_cost' => $cost
+        ]);
 
         return $cost;
     }

@@ -40,6 +40,30 @@ function shipping_method_select(get_value){
     let update_address = `<input type="hidden" name="shipping_method_id" id="shipping_method_id" value="${shipping_method_id}">
             <input type="checkbox" name="update_address" id="update_address">`+ messageUpdateThisAddress;
     $('#save_address_label').html(update_address);
+    
+    // Store selected shipping address in session
+    $.ajax({
+        url: '/select-shipping-address',
+        method: 'POST',
+        data: {
+            address_id: shipping_method_id,
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            // Update order summary after address selection
+            if (typeof updateOrderSummary === 'function') {
+                updateOrderSummary();
+            } else {
+                // Fallback: reload page after short delay
+                setTimeout(function() {
+                    location.reload();
+                }, 500);
+            }
+        },
+        error: function(xhr) {
+            console.log('Error storing shipping address:', xhr.responseText);
+        }
+    });
 }
 
 const addressItemsBilling = document.querySelectorAll('.select_billing_address');
@@ -68,6 +92,30 @@ function billing_method_select(get_billing_value){
                 <input type="hidden" name="billing_method_id" id="billing_method_id" value="${billing_method_id}">
                 <input type="checkbox" name="update_billing_address" id="update_billing_address">`+messageUpdateThisAddress;
     $('#save-billing-address-label').html(update_address_billing);
+    
+    // Store selected billing address in session
+    $.ajax({
+        url: '/select-billing-address',
+        method: 'POST',
+        data: {
+            address_id: billing_method_id,
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            // Update order summary after address selection
+            if (typeof updateOrderSummary === 'function') {
+                updateOrderSummary();
+            } else {
+                // Fallback: reload page after short delay
+                setTimeout(function() {
+                    location.reload();
+                }, 500);
+            }
+        },
+        error: function(xhr) {
+            console.log('Error storing billing address:', xhr.responseText);
+        }
+    });
 }
 
 $('.add-another-address').on('click', function (){

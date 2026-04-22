@@ -13,7 +13,10 @@
             @php($resellCommission = 0)
             @php($cart = \App\Utils\CartManager::getCartListQuery(type: 'checked'))
             @php($cartGroupIds = \App\Utils\CartManager::get_cart_group_ids())
-            @php($getShippingCost = \App\Utils\CartManager::get_shipping_cost(type: 'checked'))
+            @php($getShippingCost = 0)
+            @if(session('address_id') || session('billing_address_id'))
+                @php($getShippingCost = \App\Utils\CartManager::get_shipping_cost(type: 'checked'))
+            @endif
             @php($getShippingCostSavedForFreeDelivery = \App\Utils\CartManager::getShippingCostSavedForFreeDelivery(type: 'checked'))
             @if ($cart->count() > 0)
                 @foreach ($cart as $key => $cartItem)
@@ -27,7 +30,7 @@
                     @endif
                 @endforeach
 
-                @php($totalShippingCost = 0) {{-- Shipping forced to 0 as per request --}}
+                @php($totalShippingCost = $getShippingCost)
             @endif
 
             @php($totalSavedAmount = $totalDiscountOnProduct)
@@ -103,7 +106,8 @@
                     $coupon_dis = $couponDiscount;
                 }
 
-                $totalAmount = $subTotal + $totalTax + $totalShippingCost - $coupon_dis - $totalDiscountOnProduct + ($resellProfit ?? 0);
+                $cashHandlingFee = $totalShippingCost > 0 ? ($totalShippingCost * 0.05) : 0;
+                $totalAmount = $subTotal + $totalTax + $totalShippingCost + $cashHandlingFee - $coupon_dis - $totalDiscountOnProduct + ($resellProfit ?? 0);
                 $referralAmount = \App\Utils\CustomerManager::getReferralDiscountAmount(
                     user: (auth('customer')->check() ? auth('customer')->user() : null),
                     couponDiscount: $coupon_dis
@@ -173,11 +177,29 @@
                 @endif
             @endif
 
+            @if ($totalShippingCost > 0)
+                <div class="d-flex justify-content-between">
+                    <span class="cart_title">{{ translate('shipping_cost') }}</span>
+                    <span class="cart_value">
+                        {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $totalShippingCost), currencyCode: getCurrencyCode()) }}
+                    </span>
+                </div>
+            @endif
+
+            @if ($totalShippingCost > 0)
+                <div class="d-flex justify-content-between">
+                    <span class="cart_title">{{ translate('cash_handling_fee') }}</span>
+                    <span class="cart_value">
+                        {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: ($totalShippingCost * 0.05)), currencyCode: getCurrencyCode()) }}
+                    </span>
+                </div>
+            @endif
+
             <hr class="my-2">
             <div class="d-flex justify-content-between">
                 <span class="cart_title text-primary font-weight-bold">{{ translate('total') }}</span>
                 <span class="cart_value">
-                    {{ webCurrencyConverter(amount: $totalAmount - $referralAmount) }}
+                    {{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $totalAmount - $referralAmount), currencyCode: getCurrencyCode()) }}
                 </span>
             </div>
         </div>
@@ -273,7 +295,36 @@
     <script>
         "use strict";
         $(document).ready(function() {
-            orderSummaryStickyFunction()
+            orderSummaryStickyFunction();
+            
+            // Function to update order summary
+            function updateOrderSummary() {
+                $.ajax({
+                    url: '{{ route("shop-cart") }}',
+                    method: 'GET',
+                    success: function(response) {
+                        // Reload the page to update order summary
+                        location.reload();
+                    },
+                    error: function(xhr) {
+                        console.log('Error updating order summary:', xhr.responseText);
+                    }
+                });
+            }
+            
+            // Listen for shipping address changes
+            $(document).on('click', '.select_shipping_address', function() {
+                setTimeout(function() {
+                    updateOrderSummary();
+                }, 500);
+            });
+            
+            // Listen for new address form submission
+            $(document).on('submit', '#address-form', function() {
+                setTimeout(function() {
+                    updateOrderSummary();
+                }, 1000);
+            });
         });
     </script>
 @endpush
