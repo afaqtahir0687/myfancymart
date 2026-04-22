@@ -499,4 +499,11 @@ if (!$isGatewayPublished) {
             Route::any('response', [PaytabsController::class, 'response'])->name('response');
         });
     });
+
+    //Wallet Routes
+    Route::group(['middleware' => ['customer']], function () {
+        Route::get('wallet', [App\Http\Controllers\Web\WalletController::class, 'index'])->name('wallet.index');
+        Route::get('wallet/transactions', [App\Http\Controllers\Web\WalletController::class, 'transactions'])->name('wallet.transactions');
+        Route::post('wallet/withdraw', [App\Http\Controllers\Web\WalletController::class, 'withdraw'])->name('wallet.withdraw');
+    });
 }

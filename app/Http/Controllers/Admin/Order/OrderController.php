@@ -331,6 +331,9 @@ class OrderController extends BaseController
         if ($request['order_status'] == 'delivered') {
             $this->orderRepo->update(id: $request['id'], data: ['payment_status' => 'paid', 'is_pause' => 0]);
             $this->orderDetailRepo->updateWhere(params: ['order_id' => $order['id']], data: ['delivery_status' => $request['order_status'], 'payment_status' => 'paid']);
+            
+            // Add resell profit to wallet
+            \App\Utils\WalletManager::addResellProfit($request['id']);
         }
         event(new OrderStatusEvent(key: $request['order_status'], type: 'customer', order: $order));
         if ($request['order_status'] == 'canceled') {
