@@ -33,6 +33,7 @@ class WithdrawRequest extends Model
      * @var array
      */
     protected $fillable = [
+        'user_id',
         'seller_id',
         'delivery_man_id',
         'admin_id',
@@ -52,6 +53,11 @@ class WithdrawRequest extends Model
         'withdrawal_method_fields' => 'array',
         'approved' => 'integer',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     public function seller(): BelongsTo
     {

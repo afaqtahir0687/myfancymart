@@ -36,13 +36,26 @@ class WalletController extends Controller
 
         $userId = Auth::guard('customer')->id();
         
-        // Ensure wallet exists for the user
-        $wallet = Wallet::getOrCreate($userId);
-        
+        // Collect method specific fields
+        $methodFields = [];
+        if ($request->withdrawal_method == 'bank_transfer') {
+            $methodFields = [
+                'bank_name' => $request->bank_name,
+                'account_number' => $request->account_number,
+                'account_holder_name' => $request->account_holder_name,
+            ];
+        } elseif ($request->withdrawal_method == 'jazzcash' || $request->withdrawal_method == 'easypaisa') {
+            $methodFields = [
+                'account_number' => $request->account_number,
+                'account_name' => $request->account_name,
+            ];
+        }
+
         $result = WalletManager::processWithdrawal(
             $userId, 
             $request->amount, 
-            $request->withdrawal_method
+            $request->withdrawal_method,
+            $methodFields
         );
 
         return response()->json($result);

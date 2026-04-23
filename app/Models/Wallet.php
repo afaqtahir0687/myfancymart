@@ -86,7 +86,6 @@ class Wallet extends Model
         }
 
         $this->decrement('balance', $amount);
-        $this->increment('total_withdrawn', $amount);
         $this->save();
 
         return $this->transactions()->create([

@@ -86,10 +86,15 @@ class WalletManager
             ];
         }
 
+        $pendingWithdrawal = \App\Models\WithdrawRequest::where('user_id', $userId)
+            ->where('approved', 0)
+            ->sum('amount');
+
         return [
             'balance' => $wallet->balance,
             'total_earned' => $wallet->total_earned,
             'total_withdrawn' => $wallet->total_withdrawn,
+            'pending_withdrawal' => $pendingWithdrawal,
             'status' => $wallet->status ? 'active' : 'inactive'
         ];
     }
@@ -97,7 +102,7 @@ class WalletManager
     /**
      * Process withdrawal request
      */
-    public static function processWithdrawal($userId, $amount, $withdrawalMethod = null)
+    public static function processWithdrawal($userId, $amount, $withdrawalMethod = null, $methodFields = [])
     {
         try {
             $wallet = Wallet::where('user_id', $userId)->first();
@@ -116,19 +121,32 @@ class WalletManager
                 ];
             }
 
-            // Create debit transaction
+            // Create Withdraw Request
+            $withdrawRequest = \App\Models\WithdrawRequest::create([
+                'user_id' => $userId,
+                'amount' => $amount,
+                'withdrawal_method_id' => null, // We can use withdrawal_method_fields instead for custom info
+                'withdrawal_method_fields' => array_merge(['method_name' => $withdrawalMethod], $methodFields),
+                'approved' => 0, // Pending
+                'transaction_note' => "Withdrawal request via {$withdrawalMethod}",
+            ]);
+
+            // Create debit transaction (marking as pending)
             $transaction = $wallet->debit(
                 $amount,
                 'withdrawal',
-                "Withdrawal request - {$withdrawalMethod}",
+                "Withdrawal request #{$withdrawRequest->id} - {$withdrawalMethod}",
                 null,
                 null
             );
+            
+            // Update transaction status to pending
+            $transaction->update(['status' => 'pending']);
 
             return [
                 'success' => true,
-                'message' => 'Withdrawal processed successfully',
-                'transaction_id' => $transaction->id
+                'message' => 'Withdrawal request submitted successfully',
+                'withdraw_request_id' => $withdrawRequest->id
             ];
         } catch (\Exception $e) {
             return [

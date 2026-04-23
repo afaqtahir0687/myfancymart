@@ -45,12 +45,8 @@
         <div class="col-md-3 mb-3">
             <div class="card border-warning">
                 <div class="card-body text-center">
-                    <h6 class="text-warning">{{ translate('status') }}</h6>
-                    <h5>
-                        <span class="badge {{ $walletSummary['status'] == 'active' ? 'bg-success' : 'bg-danger' }}">
-                            {{ $walletSummary['status'] == 'active' ? translate('active') : translate('inactive') }}
-                        </span>
-                    </h5>
+                    <h6 class="text-warning">{{ translate('pending_to_approval') }}</h6>
+                    <h5 class="text-warning">{{ webCurrencyConverter(amount: $walletSummary['pending_withdrawal']) }}</h5>
                 </div>
             </div>
         </div>

@@ -97,6 +97,7 @@ use App\Http\Controllers\Admin\Deliveryman\DeliveryManCashCollectController;
 use App\Http\Controllers\Admin\Settings\StorageConnectionSettingsController;
 use App\Http\Controllers\Admin\Settings\VendorRegistrationSettingController;
 use App\Http\Controllers\Admin\Notification\PushNotificationSettingsController;
+use App\Http\Controllers\Admin\Customer\ResellerWithdrawalController;
 
 
 Route::get('search', function () {
@@ -354,6 +355,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
             Route::controller(CustomerLoyaltyController::class)->group(function () {
                 Route::get('report', 'index')->name('report');
                 Route::get('export', 'exportList')->name('export');
+            });
+        });
+
+        Route::group(['prefix' => 'reseller-withdraw', 'as' => 'reseller-withdraw-'], function () {
+            Route::controller('Admin\Customer\ResellerWithdrawalController')->group(function () {
+                Route::get('list', 'index')->name('list');
+                Route::post('status/{id}', 'statusUpdate')->name('status');
             });
         });
     });

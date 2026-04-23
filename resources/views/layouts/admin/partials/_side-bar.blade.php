@@ -823,6 +823,15 @@
                                 </span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::is('admin/customer/reseller-withdraw/list') ? 'active' : '' }}"
+                               title="{{ translate('reseller_Withdraws') }}"
+                               href="{{ route('admin.customer.reseller-withdraw-list') }}">
+                                <span class="text-truncate">
+                                    {{ translate('reseller_Withdraws') }}
+                                </span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
