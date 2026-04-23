@@ -14,6 +14,13 @@
             @php($cart = \App\Utils\CartManager::getCartListQuery(type: 'checked'))
             @php($cartGroupIds = \App\Utils\CartManager::get_cart_group_ids())
             @php($getShippingCost = \App\Utils\CartManager::get_shipping_cost(type: 'checked'))
+            {{-- Live Debug: Shipping Cost = {{ $getShippingCost }} --}}
+            {{-- Live Debug: Cart Count = {{ $cart->count() }} --}}
+            @if($cart->count() > 0)
+                @foreach($cart as $item)
+                    {{-- Live Debug: Product {{ $item['product_id'] }} - Type: {{ $item['product_type'] ?? 'unknown' }} - Shipping: {{ $item['shipping_cost'] ?? 'not_set' }} --}}
+                @endforeach
+            @endif
             {{-- Shipping cost always calculated without address requirement --}}
             @php($getShippingCostSavedForFreeDelivery = \App\Utils\CartManager::getShippingCostSavedForFreeDelivery(type: 'checked'))
             @if ($cart->count() > 0)
