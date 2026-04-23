@@ -13,13 +13,13 @@
             @php($resellCommission = 0)
             @php($cart = \App\Utils\CartManager::getCartListQuery(type: 'checked'))
             @php($cartGroupIds = \App\Utils\CartManager::get_cart_group_ids())
-            @php($getShippingCost = 0)
-            @if(session('address_id') || session('billing_address_id'))
-                @php($getShippingCost = \App\Utils\CartManager::get_shipping_cost(type: 'checked'))
-            @endif
+            @php($getShippingCost = \App\Utils\CartManager::get_shipping_cost(type: 'checked'))
+            {{-- Shipping cost always calculated without address requirement --}}
             @php($getShippingCostSavedForFreeDelivery = \App\Utils\CartManager::getShippingCostSavedForFreeDelivery(type: 'checked'))
             @if ($cart->count() > 0)
+                {{-- Debug: Cart Count = {{ $cart->count() }} --}}
                 @foreach ($cart as $key => $cartItem)
+                    {{-- Debug: Cart Item {{ $key }} - Product Type: {{ $cartItem['product_type'] ?? 'unknown' }}, Shipping Cost: {{ $cartItem['shipping_cost'] ?? 'not_set' }}, Is Resell: {{ $cartItem['is_resell'] ?? 'no' }} --}}
                     @php($subTotal += $cartItem['price'] * $cartItem['quantity'])
                     @php($totalTax += 0) {{-- Tax forced to 0 as per request --}}
                     @php($totalDiscountOnProduct += $cartItem['discount'] * $cartItem['quantity'])
