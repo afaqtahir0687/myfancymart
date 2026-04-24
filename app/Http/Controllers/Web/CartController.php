@@ -95,7 +95,10 @@ class CartController extends Controller
                 if (json_decode($product->variation)[$i]->type == $string) {
                     $tax = $product->tax_model == 'exclude' ? Helpers::tax_calculation(product: $product, price: json_decode($product->variation)[$i]->price, tax: $product['tax'], tax_type: $product['tax_type']) : 0;
                     $update_tax = $tax * $requestQuantity;
-                    $discount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: json_decode($product->variation)[$i]->price);
+                    $discount = 0;
+                    if (function_exists('isDiscountActive') && isDiscountActive($product)) {
+                        $discount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: json_decode($product->variation)[$i]->price);
+                    }
                     $price = json_decode($product->variation)[$i]->price - $discount + $tax;
                     $discountedUnitPrice = json_decode($product->variation)[$i]->price - $discount;
                     $unit_price = json_decode($product->variation)[$i]->price;
@@ -105,7 +108,10 @@ class CartController extends Controller
         } else {
             $tax = $product->tax_model == 'exclude' ? Helpers::tax_calculation(product: $product, price: $product->unit_price, tax: $product['tax'], tax_type: $product['tax_type']) : 0;
             $update_tax = $tax * $requestQuantity;
-            $discount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $product->unit_price);
+            $discount = 0;
+            if (function_exists('isDiscountActive') && isDiscountActive($product)) {
+                $discount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $product->unit_price);
+            }
             $price = $product->unit_price - $discount + $tax;
             $discountedUnitPrice = $product->unit_price - $discount;
             $unit_price = $product->unit_price;
@@ -116,7 +122,10 @@ class CartController extends Controller
         if ($product['product_type'] == 'digital' && $digitalVariation) {
             $tax = $product['tax_model'] == 'exclude' ? Helpers::tax_calculation(product: $product, price: $digitalVariation['price'], tax: $product['tax'], tax_type: $product['tax_type']) : 0;
             $update_tax = $tax * $requestQuantity;
-            $discount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $digitalVariation['price']);
+            $discount = 0;
+            if (function_exists('isDiscountActive') && isDiscountActive($product)) {
+                $discount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $digitalVariation['price']);
+            }
             $price = $digitalVariation['price'] - $discount + $tax;
             $discountedUnitPrice = $digitalVariation['price'] - $discount;
             $unit_price = $digitalVariation['price'];

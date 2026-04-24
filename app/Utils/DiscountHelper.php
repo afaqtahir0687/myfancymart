@@ -36,9 +36,14 @@ if (!function_exists('isDiscountActive')) {
         
         // Check end date
         if (isset($product->discount_end_date) && $product->discount_end_date) {
-            if ($today > $product->discount_end_date) {
+            // Convert to date format for comparison
+            $endDate = date('Y-m-d', strtotime($product->discount_end_date));
+            // Discount expires when today is greater than end date (next day onwards)
+            if ($today > $endDate) {
                 return false;
             }
+            // Discount is active on the end date (full day)
+            // Only expires from next day
         }
         
         return true;

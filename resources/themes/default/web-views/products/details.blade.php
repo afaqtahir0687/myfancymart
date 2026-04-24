@@ -214,9 +214,13 @@
                                     <div class="mb-3">
                                         <h3 class="font-weight-normal text-accent d-flex align-items-end gap-2 pt-1">
                                             <span class="discounted-unit-price fs-24 font-bold">
-                                                {{ getProductPriceByType(product: $product, type: 'discounted_unit_price', result: 'string') }}
+                                                @if(function_exists('isDiscountActive') && isDiscountActive($product))
+                                                    {{ getProductPriceByType(product: $product, type: 'discounted_unit_price', result: 'string') }}
+                                                @else
+                                                    {{ webCurrencyConverter(amount: $product->unit_price) }}
+                                                @endif
                                             </span>
-                                            @if(getProductPriceByType(product: $product, type: 'discount', result: 'value') > 0)
+                                            @if(function_exists('isDiscountActive') && isDiscountActive($product) && getProductPriceByType(product: $product, type: 'discount', result: 'value') > 0)
                                                 <del
                                                     class="product-total-unit-price align-middle text-muted fs-18 font-semibold">
                                                     {{ webCurrencyConverter(amount: $product->unit_price) }}
@@ -224,7 +228,7 @@
                                             @endif
                                         </h3>
                                         
-                                        @if($product->discount > 0)
+                                        @if(function_exists('isDiscountActive') && isDiscountActive($product) && $product->discount > 0)
                                             <div class="discount-info mt-3">
                                                 <div class="alert alert-success d-flex align-items-start gap-3">
                                                     <i class="fi fi-sr-tag fs-20 mt-1"></i>
@@ -508,7 +512,7 @@
                                                                onclick="openResellModal()"
                                                                data-product-id="{{ $product->id }}"
                                                                data-product-name="{{ $product->name }}"
-                                                               data-product-price="{{ getProductPriceByType(product: $product, type: 'discounted_unit_price', result: 'value') }}"
+                                                               data-product-price="{{ function_exists('isDiscountActive') && isDiscountActive($product) ? getProductPriceByType(product: $product, type: 'discounted_unit_price', result: 'value') : $product->unit_price }}"
                                                             >
                                                                 <i class="fa fa-refresh me-2"></i>{{ translate('resell_now') }}
                                                             </a>

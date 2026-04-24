@@ -360,6 +360,54 @@ class Product extends Model
         });
     }
 
+    public function scopeWithActiveDiscount($query)
+    {
+        $today = date('Y-m-d');
+        return $query->where(function ($query) use ($today) {
+            $query->where('discount', '>', 0)
+                  ->where('discount_is_active', 1)
+                  ->where(function ($query) use ($today) {
+                      $query->whereNull('discount_start_date')
+                            ->orWhere('discount_start_date', '<=', $today);
+                  })
+                  ->where(function ($query) use ($today) {
+                      $query->whereNull('discount_end_date')
+                            ->orWhere('discount_end_date', '>=', $today);
+                  });
+        });
+    }
+
+    public function getDiscountedUnitPriceAttribute()
+    {
+        if (function_exists('isDiscountActive') && isDiscountActive($this)) {
+            $discountAmount = 0;
+            if ($this->discount_type == 'percent') {
+                $discountAmount = ($this->unit_price * $this->discount) / 100;
+            } elseif ($this->discount_type == 'flat') {
+                $discountAmount = $this->discount;
+            }
+            return $this->unit_price - $discountAmount;
+        }
+        return $this->unit_price;
+    }
+
+    public function getDiscountAmountAttribute()
+    {
+        if (function_exists('isDiscountActive') && isDiscountActive($this)) {
+            if ($this->discount_type == 'percent') {
+                return ($this->unit_price * $this->discount) / 100;
+            } elseif ($this->discount_type == 'flat') {
+                return $this->discount;
+            }
+        }
+        return 0;
+    }
+
+    public function getHasActiveDiscountAttribute()
+    {
+        return function_exists('isDiscountActive') && isDiscountActive($this);
+    }
+
     //old relation: compare_list
     public function compareList(): HasMany
     {

@@ -37,20 +37,20 @@ class ProductManager
 {
     public static function get_product($id)
     {
-        return Product::active()
-            ->with(['rating', 'seller.shop', 'tags', 'seoInfo', 'digitalVariation', 'digitalProductAuthors.author', 'digitalProductPublishingHouse.publishingHouse', 'clearanceSale' => function ($query) {
+        return Product::with(['rating', 'seller.shop', 'tags', 'seoInfo', 'digitalVariation', 'digitalProductAuthors.author', 'digitalProductPublishingHouse.publishingHouse', 'clearanceSale' => function ($query) {
                 return $query->active();
             }])
+            ->active()
             ->where('id', $id)->first();
     }
 
     public static function get_latest_products($request, $limit = 10, $offset = 1)
     {
         $user = Helpers::getCustomerInformation($request);
-        $paginator = Product::active()
-            ->with(['rating', 'tags', 'seller.shop', 'flashDealProducts.flashDeal', 'clearanceSale' => function ($query) {
+        $paginator = Product::with(['rating', 'tags', 'seller.shop', 'flashDealProducts.flashDeal', 'clearanceSale' => function ($query) {
                 return $query->active();
             }])
+            ->active()
             ->withCount(['reviews', 'wishList' => function ($query) use ($user) {
                 $query->where('customer_id', $user != 'offline' ? $user->id : '0');
             }])
@@ -133,8 +133,8 @@ class ProductManager
         $currentDate = date('Y-m-d H:i:s');
         // Change review to ratting
         $products = Product::with(['seller.shop', 'rating', 'tags', 'flashDealProducts.flashDeal', 'clearanceSale' => function ($query) {
-            return $query->active();
-        }])->active()
+                return $query->active();
+            }])->active()
             ->withCount(['reviews', 'wishList' => function ($query) use ($user) {
                 $query->where('customer_id', $user != 'offline' ? $user->id : '0');
             }])

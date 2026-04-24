@@ -530,7 +530,10 @@ class CartManager
         }
 
         $tax = Helpers::tax_calculation(product: $product, price: $price, tax: $product['tax'], tax_type: 'percent');
-        $getProductDiscount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $price);
+        $getProductDiscount = 0;
+        if (function_exists('isDiscountActive') && isDiscountActive($product)) {
+            $getProductDiscount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $price);
+        }
 
         $cartArray += [
             'customer_id' => ($user == 'offline' ? $guestId : $user->id),
@@ -685,7 +688,10 @@ class CartManager
         }
 
         $tax = Helpers::tax_calculation(product: $product, price: $price, tax: $product['tax'], tax_type: 'percent');
-        $getProductDiscount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $price);
+        $getProductDiscount = 0;
+        if (function_exists('isDiscountActive') && isDiscountActive($product)) {
+            $getProductDiscount = getProductPriceByType(product: $product, type: 'discounted_amount', result: 'value', price: $price);
+        }
         $cartArray = [
             'customer_id' => $customerId,
             'product_id' => $request['id'],
