@@ -56,13 +56,17 @@
                 </h3>
                 <div class="justify-content-between ">
                     <h4 class="product-price d-flex flex-wrap gap-8 align-items-center row-gap-0 mb-0 letter-spacing-0">
-                        @if(getProductPriceByType(product: $product, type: 'discount', result: 'value') > 0)
+                        @if(function_exists('isDiscountActive') && isDiscountActive($product) && getProductPriceByType(product: $product, type: 'discount', result: 'value') > 0)
                             <del class="category-single-product-price">
                                 {{ webCurrencyConverter(amount: $product->unit_price) }}
                             </del>
                         @endif
                         <span class="text-accent text-dark">
-                            {{ getProductPriceByType(product: $product, type: 'discounted_unit_price', result: 'string') }}
+                            @if(function_exists('isDiscountActive') && isDiscountActive($product))
+                                {{ getProductPriceByType(product: $product, type: 'discounted_unit_price', result: 'string') }}
+                            @else
+                                {{ webCurrencyConverter(amount: $product->unit_price) }}
+                            @endif
                         </span>
                     </h4>
                 </div>

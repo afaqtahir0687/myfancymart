@@ -109,14 +109,19 @@ class CustomerAPIAuthController extends Controller
         $validator = Validator::make($request->all(), [
             'email_or_phone' => 'required',
             'password' => 'required|min:6',
-            'type' => 'required|in:phone,email'
+            'type' => 'sometimes|in:phone,email'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::validationErrorProcessor($validator)], 403);
         }
 
-        $type = $request['type'];
+        // Auto-detect type if not provided
+        $type = $request['type'] ?? null;
+        if (!$type) {
+            $type = filter_var($request['email_or_phone'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        }
+        
         $user = $this->customerRepo->getByIdentity(filters: ['identity' => $request['email_or_phone']]);
         $maxLoginHit = getWebConfig(name: 'maximum_login_hit') ?? 5;
         $tempBlockTime = getWebConfig(name: 'temporary_login_block_time') ?? 600; // seconds

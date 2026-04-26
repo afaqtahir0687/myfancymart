@@ -1,0 +1,715 @@
+{
+	"info": {
+		"_postman_id": "f1c2d3e4-f5g6-h7i8-j9k0-l1m2n3o4p5q6",
+		"name": "MyFancyMart API Collection",
+		"description": "Complete API collection for MyFancyMart Flutter App - Authentication, Reseller, and Wallet APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://fancymart.pk/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "17",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"exec": [
+					"// Log request details for debugging",
+					"console.log('Request: ' + pm.info.requestName);",
+					"console.log('Method: ' + pm.request.method);",
+					"console.log('URL: ' + pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"exec": [
+					"// Log response details",
+					"console.log('Status Code: ' + pm.response.code);",
+					"console.log('Response Time: ' + pm.response.responseTime + 'ms');",
+					"",
+					"// Basic response validation",
+					"pm.test('Response has status code', function () {",
+					"    pm.expect(pm.response).to.have.status(200);",
+					"});",
+					"",
+					"pm.test('Response is JSON', function () {",
+					"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+					"});"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Login successful', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('token');",
+									"    ",
+									"    // Save token for future requests",
+									"    if (jsonData.success && jsonData.data.token) {",
+									"        pm.collectionVariables.set('token', jsonData.data.token);",
+									"        console.log('Token saved: ' + jsonData.data.token.substring(0, 20) + '...');",
+									"    }",
+									"});",
+									"",
+									"pm.test('Response time is acceptable', function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email_or_phone\": \"meemwork0687@gmail.com\",\n  \"password\": \"Af@q0687\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Get Product Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Product details loaded', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('name');",
+									"    pm.expect(jsonData.data).to.have.property('can_resell');",
+									"});",
+									"",
+									"pm.test('Product can be resold', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.can_resell).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/products/girls-shoes",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "girls-shoes"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reseller",
+			"item": [
+				{
+					"name": "Get Resellable Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Products loaded', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"    ",
+									"    if (jsonData.data.length > 0) {",
+									"        const product = jsonData.data[0];",
+									"        pm.expect(product).to.have.property('id');",
+									"        pm.expect(product).to.have.property('can_resell');",
+									"        pm.expect(product).to.have.property('resell_info');",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/reseller/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["reseller", "products"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add to Cart for Resell",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Product added to cart', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('is_resell', true);",
+									"    pm.expect(jsonData.data).to.have.property('resell_profit');",
+									"    ",
+									"    // Save cart ID for later tests",
+									"    if (jsonData.success && jsonData.data.id) {",
+									"        pm.collectionVariables.set('cartId', jsonData.data.id);",
+									"    }",
+									"});",
+									"",
+									"pm.test('Profit calculated correctly', function () {",
+									"    const jsonData = pm.response.json();",
+									"    // Assuming base price is 100 and resell price is 150",
+									"    const expectedProfit = 150 - 100;",
+									"    pm.expect(jsonData.data.resell_profit).to.eql(expectedProfit);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": {{productId}},\n  \"resell_price\": 150.00,\n  \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/reseller/add-to-cart",
+							"host": ["{{baseUrl}}"],
+							"path": ["reseller", "add-to-cart"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Cart loaded with resell items', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    ",
+									"    // Check if cart contains resell items",
+									"    const hasResellItems = jsonData.data.some(item => item.is_resell === true);",
+									"    pm.expect(hasResellItems).to.be.true;",
+									"});",
+									"",
+									"pm.test('Resell item has required fields', function () {",
+									"    const jsonData = pm.response.json();",
+									"    const resellItem = jsonData.data.find(item => item.is_resell === true);",
+									"    ",
+									"    if (resellItem) {",
+									"        pm.expect(resellItem).to.have.property('resell_profit');",
+									"        pm.expect(resellItem).to.have.property('resell_commission');",
+									"        pm.expect(resellItem.resell_profit).to.be.a('number');",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/reseller/cart",
+							"host": ["{{baseUrl}}"],
+							"path": ["reseller", "cart"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Order summary includes resell profit', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('resell_profit');",
+									"    pm.expect(jsonData.data.resell_profit).to.be.above(0);",
+									"});",
+									"",
+									"pm.test('Order summary has all required fields', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('sub_total');",
+									"    pm.expect(jsonData.data).to.have.property('total_shipping_cost');",
+									"    pm.expect(jsonData.data).to.have.property('cash_handling_fee');",
+									"    pm.expect(jsonData.data).to.have.property('total_amount');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/reseller/order-summary",
+							"host": ["{{baseUrl}}"],
+							"path": ["reseller", "order-summary"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wallet",
+			"item": [
+				{
+					"name": "Get Wallet Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Wallet summary loaded', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('balance');",
+									"    pm.expect(jsonData.data).to.have.property('total_earned');",
+									"    pm.expect(jsonData.data).to.have.property('pending_withdrawal');",
+									"});",
+									"",
+									"pm.test('Wallet balance is numeric', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.balance).to.be.a('number');",
+									"    pm.expect(jsonData.data.total_earned).to.be.a('number');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallet/summary",
+							"host": ["{{baseUrl}}"],
+							"path": ["wallet", "summary"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Wallet Transactions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Transactions loaded', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Transaction has required fields', function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        const transaction = jsonData.data[0];",
+									"        pm.expect(transaction).to.have.property('transaction_type');",
+									"        pm.expect(transaction).to.have.property('amount');",
+									"        pm.expect(transaction).to.have.property('description');",
+									"        pm.expect(transaction).to.have.property('created_at');",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallet/transactions?limit=20&page=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["wallet", "transactions"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Request Withdrawal - Bank Transfer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Withdrawal request submitted', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data.amount).to.eql(50.00);",
+									"});",
+									"",
+									"pm.test('Withdrawal method saved', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('withdrawal_method', 'bank_transfer');",
+									"    pm.expect(jsonData.data).to.have.property('bank_name', 'HBL');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 50.00,\n  \"withdrawal_method\": \"bank_transfer\",\n  \"bank_name\": \"HBL\",\n  \"account_number\": \"1234567890\",\n  \"account_holder_name\": \"John Doe\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallet/withdraw",
+							"host": ["{{baseUrl}}"],
+							"path": ["wallet", "withdraw"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Request Withdrawal - JazzCash",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('JazzCash withdrawal submitted', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('withdrawal_method', 'jazzcash');",
+									"    pm.expect(jsonData.data).to.have.property('account_number', '03123456789');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 30.00,\n  \"withdrawal_method\": \"jazzcash\",\n  \"account_number\": \"03123456789\",\n  \"account_name\": \"John Doe\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallet/withdraw",
+							"host": ["{{baseUrl}}"],
+							"path": ["wallet", "withdraw"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Withdrawal Requests",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Withdrawal requests loaded', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Withdrawal request has required fields', function () {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        const request = jsonData.data[0];",
+									"        pm.expect(request).to.have.property('amount');",
+									"        pm.expect(request).to.have.property('withdrawal_method');",
+									"        pm.expect(request).to.have.property('approved');",
+									"        pm.expect(request).to.have.property('created_at');",
+									"    }",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallet/withdrawal-requests",
+							"host": ["{{baseUrl}}"],
+							"path": ["wallet", "withdrawal-requests"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Wallet Balance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Balance loaded', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('balance');",
+									"    pm.expect(jsonData.data.balance).to.be.a('number');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallet/balance",
+							"host": ["{{baseUrl}}"],
+							"path": ["wallet", "balance"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Error Testing",
+			"item": [
+				{
+					"name": "Invalid Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Invalid login returns error', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+									"    pm.expect(jsonData.success).to.be.false;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email_or_phone\": \"invalid@email.com\",\n  \"password\": \"wrongpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unauthorized API Access",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Unauthorized request returns 401', function () {",
+									"    pm.expect(pm.response.code).to.eql(401);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/wallet/summary",
+							"host": ["{{baseUrl}}"],
+							"path": ["wallet", "summary"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insufficient Balance Withdrawal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Insufficient balance returns error', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.false;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 999999.99,\n  \"withdrawal_method\": \"bank_transfer\",\n  \"bank_name\": \"HBL\",\n  \"account_number\": \"1234567890\",\n  \"account_holder_name\": \"John Doe\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallet/withdraw",
+							"host": ["{{baseUrl}}"],
+							"path": ["wallet", "withdraw"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

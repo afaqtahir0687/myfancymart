@@ -431,6 +431,11 @@ class Helpers
 
     public static function getProductDiscount($product, $price): float
     {
+        // Check if discount is active using DiscountHelper
+        if (!function_exists('isDiscountActive') || !isDiscountActive((object)$product)) {
+            return 0;
+        }
+        
         $discount = 0;
         if ($product['discount_type'] == 'percent') {
             $discount = ($price * $product['discount']) / 100;

@@ -27,6 +27,8 @@ use App\Http\Controllers\RestAPI\v1\SellerController;
 use App\Http\Controllers\RestAPI\v1\ShippingMethodController;
 use App\Http\Controllers\RestAPI\v1\UserLoyaltyController;
 use App\Http\Controllers\RestAPI\v1\UserWalletController;
+use App\Http\Controllers\RestAPI\v1\ResellerController;
+use App\Http\Controllers\RestAPI\v1\WalletAPIController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Customer\PaymentController;
 
@@ -337,6 +339,27 @@ Route::group(['namespace' => 'RestAPI\v1', 'prefix' => 'v1', 'middleware' => ['a
             Route::controller(UserWalletController::class)->group(function () {
                 Route::get('list', 'list');
                 Route::get('bonus-list', 'bonus_list');
+            });
+        });
+
+        //reseller
+        Route::group(['prefix' => 'reseller', 'middleware' => ['customer']], function () {
+            Route::controller(ResellerController::class)->group(function () {
+                Route::post('add-to-cart', 'addToCart');
+                Route::get('cart', 'getCart');
+                Route::get('order-summary', 'getOrderSummary');
+                Route::get('products', 'getResellableProducts');
+            });
+        });
+
+        //wallet api
+        Route::group(['prefix' => 'wallet', 'middleware' => ['customer']], function () {
+            Route::controller(WalletAPIController::class)->group(function () {
+                Route::get('summary', 'getSummary');
+                Route::get('transactions', 'getTransactions');
+                Route::post('withdraw', 'requestWithdrawal');
+                Route::get('withdrawal-requests', 'getWithdrawalRequests');
+                Route::get('balance', 'getBalance');
             });
         });
 
