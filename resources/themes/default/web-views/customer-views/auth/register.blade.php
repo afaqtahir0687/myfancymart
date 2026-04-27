@@ -160,7 +160,11 @@
                     <div class="web-direction">
                         <div class="mx-auto mt-4 __max-w-356">
                             <button class="w-100 btn btn--primary" id="sign-up" type="submit" disabled>
-                                {{ translate('sign_up') }}
+                                <span class="btn-text">{{ translate('sign_up') }}</span>
+                                <span class="btn-loader d-none">
+                                    <i class="tio-loading spinner-border spinner-border-sm" role="status" aria-hidden="true"></i>
+                                    {{ translate('processing') }}...
+                                </span>
                             </button>
                         </div>
 
@@ -201,4 +205,46 @@
             </div>
         </div>
     </div>
+@push('script')
+    <script>
+        $(document).ready(function() {
+            let isSubmitting = false;
+            
+            $('#customer-register-form').on('submit', function(e) {
+                if (isSubmitting) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                isSubmitting = true;
+                
+                // Show loader and hide text
+                $('#sign-up .btn-text').addClass('d-none');
+                $('#sign-up .btn-loader').removeClass('d-none');
+                $('#sign-up').prop('disabled', true);
+                
+                // Re-enable after 10 seconds as a fallback
+                setTimeout(function() {
+                    if (isSubmitting) {
+                        isSubmitting = false;
+                        $('#sign-up .btn-text').removeClass('d-none');
+                        $('#sign-up .btn-loader').addClass('d-none');
+                        $('#sign-up').prop('disabled', false);
+                    }
+                }, 10000);
+            });
+            
+            // Handle AJAX response
+            $(document).ajaxComplete(function(event, xhr, settings) {
+                if (settings.url && settings.url.includes('/customer/auth/sign-up')) {
+                    isSubmitting = false;
+                    $('#sign-up .btn-text').removeClass('d-none');
+                    $('#sign-up .btn-loader').addClass('d-none');
+                    $('#sign-up').prop('disabled', false);
+                }
+            });
+        });
+    </script>
+@endpush
+
 @endsection

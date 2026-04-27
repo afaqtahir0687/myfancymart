@@ -37,6 +37,8 @@ use App\Contracts\Repositories\ReferByEarnCustomerRepositoryInterface;
 use App\Contracts\Repositories\PhoneOrEmailVerificationRepositoryInterface;
 use App\Events\CustomerRegisteredViaReferralEvent;
 use App\Models\ReferralCustomer;
+use App\Mail\WelcomeEmail;
+use Illuminate\Support\Facades\Mail;
 
 class RegisterController extends Controller
 {
@@ -83,6 +85,13 @@ class RegisterController extends Controller
         if (!empty($referUser) && isset($referralConfig['ref_earning_discount_status']) && $referralConfig['ref_earning_discount_status'] == 1) {
             $referralCustomer = $this->referByEarnCustomerService->addReferralCustomerData(referralData: $referralConfig, referralEarningRate: $referralEarningRate, referUser: $referUser, userId: $user->id);
             event(new CustomerRegisteredViaReferralEvent($referralCustomer, $referUser));
+        }
+
+        // Send welcome email
+        try {
+            Mail::to($user->email)->queue(new WelcomeEmail($user));
+        } catch (\Exception $e) {
+            Log::error('Welcome email failed to send: ' . $e->getMessage());
         }
 
         $phoneVerification = getLoginConfig(key: 'phone_verification');
