@@ -24,11 +24,11 @@ class BusinessPageUpdateRequest extends FormRequest
 
         return [
             'title' => [
-                'required', 'string', Rule::unique('business_pages', 'title')->ignore($this['id']),
+                'required', 'string', Rule::unique('business_pages', 'title')->ignore($this->id),
             ],
             'description' => 'string',
             'slug' => [
-                'string', Rule::unique('business_pages', 'slug')->ignore($this['id']),
+                'string', Rule::unique('business_pages', 'slug')->ignore($this->id),
             ],
         ];
     }
