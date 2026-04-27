@@ -33,14 +33,17 @@ class ResellerController extends Controller
             ], 422);
         }
 
-        if (!Auth::guard('customer')->check()) {
+        $customer = auth('api')->user();
+        if (!$customer || $customer == 'offline') {
+            $customer = Helpers::getCustomerInformation($request);
+        }
+
+        if (!$customer || $customer == 'offline') {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login to resell'
             ], 401);
         }
-
-        $customer = Auth::guard('customer')->user();
         $product = Product::find($request->product_id);
 
         if (!$product) {
@@ -99,14 +102,17 @@ class ResellerController extends Controller
      */
     public function getCart(Request $request): JsonResponse
     {
-        if (!Auth::guard('customer')->check()) {
+        $customer = auth('api')->user();
+        if (!$customer || $customer == 'offline') {
+            $customer = Helpers::getCustomerInformation($request);
+        }
+
+        if (!$customer || $customer == 'offline') {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login'
             ], 401);
         }
-
-        $customer = Auth::guard('customer')->user();
         $cartItems = Cart::where('customer_id', $customer->id)
             ->where('is_resell', 1)
             ->with('product')
@@ -142,14 +148,14 @@ class ResellerController extends Controller
      */
     public function getOrderSummary(Request $request): JsonResponse
     {
-        if (!Auth::guard('customer')->check()) {
+        if (!Helpers::getCustomerInformation($request) != 'offline') {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login'
             ], 401);
         }
 
-        $customer = Auth::guard('customer')->user();
+        $customer = Helpers::getCustomerInformation($request);
         $cartItems = Cart::where('customer_id', $customer->id)
             ->where('is_checked', 1)
             ->get();

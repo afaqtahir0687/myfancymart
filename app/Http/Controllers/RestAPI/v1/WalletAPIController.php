@@ -19,14 +19,13 @@ class WalletAPIController extends Controller
      */
     public function getSummary(Request $request): JsonResponse
     {
-        if (!Auth::guard('customer')->check()) {
+        $customer = Helpers::getCustomerInformation($request);
+        if ($customer == 'offline') {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login'
             ], 401);
         }
-
-        $customer = Auth::guard('customer')->user();
         $walletSummary = WalletManager::getWalletSummary($customer->id);
 
         return response()->json([
@@ -40,14 +39,13 @@ class WalletAPIController extends Controller
      */
     public function getTransactions(Request $request): JsonResponse
     {
-        if (!Auth::guard('customer')->check()) {
+        $customer = Helpers::getCustomerInformation($request);
+        if ($customer == 'offline') {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login'
             ], 401);
         }
-
-        $customer = Auth::guard('customer')->user();
         
         $transactions = WalletTransaction::where('wallet_id', function($query) use ($customer) {
             $query->select('id')->from('wallets')->where('user_id', $customer->id);
@@ -85,7 +83,8 @@ class WalletAPIController extends Controller
      */
     public function requestWithdrawal(Request $request): JsonResponse
     {
-        if (!Auth::guard('customer')->check()) {
+        $customer = Helpers::getCustomerInformation($request);
+        if ($customer == 'offline') {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login'
@@ -109,7 +108,6 @@ class WalletAPIController extends Controller
             ], 422);
         }
 
-        $customer = Auth::guard('customer')->user();
         
         // Process withdrawal using WalletManager
         $result = WalletManager::processWithdrawal($customer->id, $request->amount, $request->withdrawal_method, [
@@ -138,14 +136,13 @@ class WalletAPIController extends Controller
      */
     public function getWithdrawalRequests(Request $request): JsonResponse
     {
-        if (!Auth::guard('customer')->check()) {
+        $customer = Helpers::getCustomerInformation($request);
+        if ($customer == 'offline') {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login'
             ], 401);
         }
-
-        $customer = Auth::guard('customer')->user();
         
         $requests = WithdrawRequest::where('user_id', $customer->id)
             ->orderBy('created_at', 'desc')
@@ -185,14 +182,13 @@ class WalletAPIController extends Controller
      */
     public function getBalance(Request $request): JsonResponse
     {
-        if (!Auth::guard('customer')->check()) {
+        $customer = Helpers::getCustomerInformation($request);
+        if ($customer == 'offline') {
             return response()->json([
                 'success' => false,
                 'message' => 'Please login'
             ], 401);
         }
-
-        $customer = Auth::guard('customer')->user();
         $wallet = Wallet::where('user_id', $customer->id)->first();
 
         return response()->json([

@@ -342,26 +342,7 @@ Route::group(['namespace' => 'RestAPI\v1', 'prefix' => 'v1', 'middleware' => ['a
             });
         });
 
-        //reseller
-        Route::group(['prefix' => 'reseller', 'middleware' => ['customer']], function () {
-            Route::controller(ResellerController::class)->group(function () {
-                Route::post('add-to-cart', 'addToCart');
-                Route::get('cart', 'getCart');
-                Route::get('order-summary', 'getOrderSummary');
-                Route::get('products', 'getResellableProducts');
-            });
-        });
 
-        //wallet api
-        Route::group(['prefix' => 'wallet', 'middleware' => ['customer']], function () {
-            Route::controller(WalletAPIController::class)->group(function () {
-                Route::get('summary', 'getSummary');
-                Route::get('transactions', 'getTransactions');
-                Route::post('withdraw', 'requestWithdrawal');
-                Route::get('withdrawal-requests', 'getWithdrawalRequests');
-                Route::get('balance', 'getBalance');
-            });
-        });
 
         //loyalty
         Route::group(['prefix' => 'loyalty'], function () {
@@ -439,4 +420,25 @@ Route::group(['namespace' => 'RestAPI\v1', 'prefix' => 'v1', 'middleware' => ['a
     });
 
     Route::post('contact-us', 'GeneralController@contact_store');
+
+    //reseller
+    Route::group(['prefix' => 'reseller', 'middleware' => ['apiGuestCheck']], function () {
+        Route::controller(ResellerController::class)->group(function () {
+            Route::post('add-to-cart', 'addToCart');
+            Route::get('cart', 'getCart');
+            Route::get('order-summary', 'getOrderSummary');
+            Route::get('products', 'getResellableProducts');
+        });
+    });
+
+    //wallet api
+    Route::group(['prefix' => 'wallet', 'middleware' => ['apiGuestCheck']], function () {
+        Route::controller(WalletAPIController::class)->group(function () {
+            Route::get('summary', 'getSummary');
+            Route::get('transactions', 'getTransactions');
+            Route::post('withdraw', 'requestWithdrawal');
+            Route::get('withdrawal-requests', 'getWithdrawalRequests');
+            Route::get('balance', 'getBalance');
+        });
+    });
 });
