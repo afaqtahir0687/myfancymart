@@ -302,7 +302,14 @@ if (!function_exists('getProductPriceByType')) {
                 } else if ($clearanceSale['discount_type'] =='flat') {
                     return $result == 'value' ? $clearanceSale['discount_amount'] : webCurrencyConverter(amount: $clearanceSale['discount_amount']);
                 }
-            } else if ($product['discount_type'] == 'percent') {
+            }
+
+            // Check if regular discount is active
+            if (!isDiscountActive($product)) {
+                return 0;
+            }
+
+            if ($product['discount_type'] == 'percent') {
                 $amount = round($product['discount'], (!empty($decimalPointSettings) ? $decimalPointSettings: 0));
                 return $result == 'value' ? $amount : $amount.'%';
             } else if ($product['discount_type'] =='flat') {

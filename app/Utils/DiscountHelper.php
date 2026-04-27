@@ -6,44 +6,46 @@ if (!function_exists('isDiscountActive')) {
      */
     function isDiscountActive($product): bool
     {
-        if (!$product || !isset($product->discount)) {
+        if (!$product) {
+            return false;
+        }
+
+        $discount = is_array($product) ? ($product['discount'] ?? 0) : ($product->discount ?? 0);
+        $discount_is_active = is_array($product) ? ($product['discount_is_active'] ?? 1) : ($product->discount_is_active ?? 1);
+        $discount_start_date = is_array($product) ? ($product['discount_start_date'] ?? null) : ($product->discount_start_date ?? null);
+        $discount_end_date = is_array($product) ? ($product['discount_end_date'] ?? null) : ($product->discount_end_date ?? null);
+        
+        // Check if discount amount is valid
+        if ($discount <= 0) {
             return false;
         }
         
         // Check if discount is enabled
-        if (isset($product->discount_is_active) && !$product->discount_is_active) {
-            return false;
-        }
-        
-        // Check if discount amount is valid
-        if ($product->discount <= 0) {
+        if (!$discount_is_active) {
             return false;
         }
         
         $today = date('Y-m-d');
         
         // If no dates are set, use legacy behavior
-        if (!isset($product->discount_start_date) && !isset($product->discount_end_date)) {
+        if (!$discount_start_date && !$discount_end_date) {
             return true;
         }
         
         // Check start date
-        if (isset($product->discount_start_date) && $product->discount_start_date) {
-            if ($today < $product->discount_start_date) {
+        if ($discount_start_date) {
+            $startDate = date('Y-m-d', strtotime($discount_start_date));
+            if ($today < $startDate) {
                 return false;
             }
         }
         
         // Check end date
-        if (isset($product->discount_end_date) && $product->discount_end_date) {
-            // Convert to date format for comparison
-            $endDate = date('Y-m-d', strtotime($product->discount_end_date));
-            // Discount expires when today is greater than end date (next day onwards)
+        if ($discount_end_date) {
+            $endDate = date('Y-m-d', strtotime($discount_end_date));
             if ($today > $endDate) {
                 return false;
             }
-            // Discount is active on the end date (full day)
-            // Only expires from next day
         }
         
         return true;
@@ -60,13 +62,15 @@ if (!function_exists('getDiscountDaysRemaining')) {
             return 0;
         }
         
+        $discount_end_date = is_array($product) ? ($product['discount_end_date'] ?? null) : ($product->discount_end_date ?? null);
+        
         // If no end date is set, return 0 (no limit)
-        if (!isset($product->discount_end_date) || !$product->discount_end_date) {
+        if (!$discount_end_date) {
             return 0;
         }
         
         $today = new DateTime(date('Y-m-d'));
-        $endDate = new DateTime($product->discount_end_date);
+        $endDate = new DateTime($discount_end_date);
         
         if ($today > $endDate) {
             return 0;
@@ -87,7 +91,9 @@ if (!function_exists('getDiscountStatusText')) {
             return translate('discount_not_available');
         }
         
-        if ($product->discount <= 0) {
+        $discount = is_array($product) ? ($product['discount'] ?? 0) : ($product->discount ?? 0);
+        
+        if ($discount <= 0) {
             return translate('no_discount');
         }
         
@@ -122,7 +128,8 @@ if (!function_exists('getProductDiscountAmount')) {
             return 0;
         }
         
-        return (float)($product->discount ?? 0);
+        $discount = is_array($product) ? ($product['discount'] ?? 0) : ($product->discount ?? 0);
+        return (float)($discount ?? 0);
     }
 }
 
@@ -136,7 +143,8 @@ if (!function_exists('getProductDiscountedPrice')) {
             return 0;
         }
         
-        $basePrice = (float)($product->unit_price ?? 0);
+        $unit_price = is_array($product) ? ($product['unit_price'] ?? 0) : ($product->unit_price ?? 0);
+        $basePrice = (float)($unit_price ?? 0);
         $discountAmount = getProductDiscountAmount($product);
         
         return max(0, $basePrice - $discountAmount);
@@ -153,7 +161,8 @@ if (!function_exists('getDiscountPercentage')) {
             return 0;
         }
         
-        $basePrice = (float)($product->unit_price ?? 0);
+        $unit_price = is_array($product) ? ($product['unit_price'] ?? 0) : ($product->unit_price ?? 0);
+        $basePrice = (float)($unit_price ?? 0);
         $discountAmount = getProductDiscountAmount($product);
         
         if ($basePrice <= 0) {
@@ -176,8 +185,9 @@ if (!function_exists('formatDiscountDisplay')) {
         
         $discountAmount = getProductDiscountAmount($product);
         $percentage = getDiscountPercentage($product);
+        $discount_type = is_array($product) ? ($product['discount_type'] ?? '') : ($product->discount_type ?? '');
         
-        if ($product->discount_type == 'percent') {
+        if ($discount_type == 'percent') {
             return $percentage . '% ' . translate('off');
         } else {
             return currencyConverter($discountAmount) . ' ' . translate('off');
@@ -224,12 +234,18 @@ if (!function_exists('getDiscountCountdownData')) {
      */
     function getDiscountCountdownData($product): array
     {
-        if (!$product || !isDiscountActive($product) || !isset($product->discount_end_date)) {
+        if (!$product || !isDiscountActive($product)) {
+            return [];
+        }
+        
+        $discount_end_date = is_array($product) ? ($product['discount_end_date'] ?? null) : ($product->discount_end_date ?? null);
+        
+        if (!$discount_end_date) {
             return [];
         }
         
         return [
-            'end_date' => $product->discount_end_date,
+            'end_date' => $discount_end_date,
             'days_remaining' => getDiscountDaysRemaining($product),
             'is_active' => true,
             'message' => getDiscountStatusText($product)

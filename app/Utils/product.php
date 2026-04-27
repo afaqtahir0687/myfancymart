@@ -65,6 +65,11 @@ if (!function_exists('getProductDiscount')) {
      */
     function getProductDiscount(object|array $product, string|float|int $price): float
     {
+        // Check if discount is active based on dates
+        if (!isDiscountActive($product)) {
+            return 0;
+        }
+
         $discount = 0;
         if ($product['discount_type'] == 'percent') {
             $discount = ($price * $product['discount']) / 100;

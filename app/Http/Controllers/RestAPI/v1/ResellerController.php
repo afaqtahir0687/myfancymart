@@ -53,8 +53,11 @@ class ResellerController extends Controller
             ], 404);
         }
 
+        // Calculate purchase price for reseller (use discounted price if active, otherwise unit price)
+        $purchasePrice = getProductDiscountedPrice($product);
+        
         // Calculate profit
-        $resellProfit = $request->resell_price - $product->unit_price;
+        $resellProfit = $request->resell_price - $purchasePrice;
 
         // Add to cart
         $cartData = [
@@ -202,18 +205,20 @@ class ResellerController extends Controller
         return response()->json([
             'success' => true,
             'data' => $products->items()->map(function ($product) {
+                $currentPrice = getProductDiscountedPrice($product);
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'unit_price' => $product->unit_price,
+                    'purchase_price' => $currentPrice, // The price the reseller "buys" at
                     'thumbnail' => $product->thumbnail,
-                    'discount' => $product->discount,
+                    'discount' => isDiscountActive($product) ? $product->discount : 0,
                     'discount_type' => $product->discount_type,
                     'can_resell' => true,
                     'resell_info' => [
-                        'base_price' => $product->unit_price,
-                        'min_resell_price' => $product->unit_price,
+                        'base_price' => $currentPrice,
+                        'min_resell_price' => $currentPrice,
                         'max_resell_price' => 999999.99,
                     ]
                 ];
