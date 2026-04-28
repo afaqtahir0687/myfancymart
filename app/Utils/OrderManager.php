@@ -1083,29 +1083,31 @@ if (!$coupon) {
             $orderPlacedMailEvents[] = [
                 'email' => $vendor['email'],
                 'data' => [
-                    'subject' => translate('new_order_received'),
+                    'subject' => translate('new_order_received') . ' - ' . $userName,
                     'title' => translate('new_order_received'),
                     'userType' => $vendorType == 'admin' ? 'admin' : 'vendor',
                     'templateName' => 'order-received',
                     'order' => $order,
                     'orderId' => $order['id'],
+                    'userName' => $userName,
                     'vendorName' => $vendor?->f_name,
                     'adminName' => $vendor?->name,
                 ]
             ];
 
             if ($vendorType != 'admin') {
-                $admin = Admin::where('admin_role_id', 1)->first();
-                if ($admin) {
+                $admins = Admin::where('admin_role_id', 1)->get();
+                foreach ($admins as $admin) {
                     $orderPlacedMailEvents[] = [
                         'email' => $admin['email'],
                         'data' => [
-                            'subject' => translate('new_order_received'),
+                            'subject' => translate('new_order_received') . ' - ' . $userName,
                             'title' => translate('new_order_received'),
                             'userType' => 'admin',
                             'templateName' => 'order-received',
                             'order' => $order,
                             'orderId' => $order['id'],
+                            'userName' => $userName,
                             'adminName' => $admin['name'],
                         ]
                     ];
