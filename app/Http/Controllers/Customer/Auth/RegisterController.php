@@ -38,6 +38,7 @@ use App\Contracts\Repositories\PhoneOrEmailVerificationRepositoryInterface;
 use App\Events\CustomerRegisteredViaReferralEvent;
 use App\Models\ReferralCustomer;
 use App\Mail\WelcomeEmail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class RegisterController extends Controller

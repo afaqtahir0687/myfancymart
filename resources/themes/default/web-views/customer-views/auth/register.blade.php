@@ -243,6 +243,20 @@
                     $('#sign-up').prop('disabled', false);
                 }
             });
+
+            // Terms and conditions agreement logic
+            $('#inputChecked').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#sign-up').prop('disabled', false);
+                } else {
+                    $('#sign-up').prop('disabled', true);
+                }
+            });
+            
+            // Initial check in case it's auto-filled
+            if ($('#inputChecked').is(':checked')) {
+                $('#sign-up').prop('disabled', false);
+            }
         });
     </script>
 @endpush
