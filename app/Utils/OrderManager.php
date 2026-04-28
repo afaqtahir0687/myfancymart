@@ -1093,6 +1093,24 @@ if (!$coupon) {
                     'adminName' => $vendor?->name,
                 ]
             ];
+
+            if ($vendorType != 'admin') {
+                $admin = Admin::where('admin_role_id', 1)->first();
+                if ($admin) {
+                    $orderPlacedMailEvents[] = [
+                        'email' => $admin['email'],
+                        'data' => [
+                            'subject' => translate('new_order_received'),
+                            'title' => translate('new_order_received'),
+                            'userType' => 'admin',
+                            'templateName' => 'order-received',
+                            'order' => $order,
+                            'orderId' => $order['id'],
+                            'adminName' => $admin['name'],
+                        ]
+                    ];
+                }
+            }
         }
         return $orderPlacedMailEvents;
     }

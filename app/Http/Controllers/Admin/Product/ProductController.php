@@ -21,6 +21,10 @@ use App\Contracts\Repositories\RestockProductCustomerRepositoryInterface;
 use App\Contracts\Repositories\RestockProductRepositoryInterface;
 use App\Contracts\Repositories\ReviewRepositoryInterface;
 use App\Contracts\Repositories\StockClearanceProductRepositoryInterface;
+use App\Contracts\Repositories\DeliveryManTransactionRepositoryInterface;
+use App\Contracts\Repositories\LoyaltyPointTransactionRepositoryInterface;
+use App\Contracts\Repositories\OrderExpectedDeliveryHistoryRepositoryInterface;
+use App\Jobs\SendProductNotificationJob;
 use App\Contracts\Repositories\StockClearanceSetupRepositoryInterface;
 use App\Contracts\Repositories\TranslationRepositoryInterface;
 use App\Contracts\Repositories\VendorRepositoryInterface;
@@ -173,6 +177,9 @@ class ProductController extends BaseController
 
         $this->productSeoRepo->add(data: $service->getProductSEOData(request: $request, product: $savedProduct, action: 'add'));
 
+        // Dispatch new product notification
+        SendProductNotificationJob::dispatch($savedProduct, 'new');
+
         updateSetupGuideCacheKey(key: 'add_new_product', panel: 'admin');
         ToastMagic::success(translate('product_added_successfully'));
         return redirect()->route('admin.products.list', ['in_house']);
@@ -271,6 +278,11 @@ class ProductController extends BaseController
         $updatedProduct = $this->productRepo->getFirstWhere(params: ['id' => $product['id']]);
         $this->updateRestockRequestListAndNotify(product: $product, updatedProduct: $updatedProduct);
         $this->updateStockClearanceProduct(product: $updatedProduct);
+
+        // Check if discount was applied or updated
+        if ($updatedProduct['discount'] > 0 && $updatedProduct['discount'] != $product['discount']) {
+            SendProductNotificationJob::dispatch($updatedProduct, 'discount');
+        }
 
         updateSetupGuideCacheKey(key: 'add_new_product', panel: 'admin');
         ToastMagic::success(translate('product_updated_successfully'));
